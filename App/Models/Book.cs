@@ -28,6 +28,7 @@ namespace App.Models
     public class Book
     {
         public string Id { get; set; } = Guid.NewGuid().ToString();
+        
         public string name { get; set; }
         public string passage { get; set; }
         public string summary { get; set; }

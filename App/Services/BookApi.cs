@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -14,54 +15,89 @@ namespace App.Services
     {
         private readonly HttpClient _httpClient;
         JsonSerializerOptions _serializerOptions;
-        private readonly string _baseUrl = "https://10.0.2.2:443/api"; // Base URL
+        private readonly string _baseUrl = "https://10.0.2.2:443/api";
 
         // Le constructeur de BookApi
-        public BookApi(string token, HttpClient httpClient)
+        public BookApi(IHttpClientFactory httpClientFactory)
         {
-            _httpClient = httpClient;
+            string token = "gsgsdsgds";
+            _httpClient = httpClientFactory.CreateClient("api");
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
 
-        // Envoi de la requête HTTP
-        private async Task<T> SendRequestAsync<T>(HttpMethod method, string endpoint, object data = null)
-        {
-            var request = new HttpRequestMessage(method, new Uri(_baseUrl + endpoint))
-            {
-                Content = data != null ? new StringContent(JsonSerializer.Serialize(data), Encoding.UTF8, "application/json") : null
-            };
-
-            var response = await _httpClient.SendAsync(request);
-            response.EnsureSuccessStatusCode();  // Assure que la réponse a un code de succès
-
-            var responseContent = await response.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<T>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-        }
-
         // GET : Récupérer tous les livres
-        public async Task<List<Book>> GetAllBooksAsync()
+        public async Task<Book> GetAllBooksAsync()
         {
-            var response = await SendRequestAsync<List<Book>>(HttpMethod.Get, "/book/");
-            if (response == null || !response.Any())
-                throw new Exception("Aucun livre trouvé");
+            var response = await _httpClient.GetAsync("api/book");
 
-            return response;
+            if (!response.IsSuccessStatusCode)
+                throw new Exception("Erreur lors de la récupération des livres");
+
+            var json = await response.Content.ReadAsStringAsync();
+            var book = JsonSerializer.Deserialize<Book>(json);
+
+            return book!;
         }
-
         // GET : Récupérer un livre par son ID
-        public Task<Book?> GetBookByIdAsync(int id) =>
-            SendRequestAsync<Book?>(HttpMethod.Get, $"/book/{id}");
+        public async Task<Book> GetBookByIdAsync(int id)
+        {
+            var response = await _httpClient.GetAsync($"api/book/{id}");
 
+            if (!response.IsSuccessStatusCode)
+                throw new Exception("Erreur lors de la recherche d'un livre");
+
+            var json = await response.Content.ReadAsStringAsync();
+            var book = JsonSerializer.Deserialize<Book>(json);
+
+            return book!;
+        }
         // POST : Créer un livre
-        public Task<bool> CreateBookAsync(Book book) =>
-            SendRequestAsync<bool>(HttpMethod.Post, "/book/add", book);
+        public async Task<Book> CreateBookAsync(Book createbook, bool newBook = false)
+        {
+            try
+            {
+                var json = JsonSerializer.Serialize(createbook, _serializerOptions);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                HttpResponseMessage response;
+                response = await _httpClient.PostAsync("api/book/add", content);
+
+                if (!response.IsSuccessStatusCode)
+                    throw new Exception("Erreur lors de la création d'un livre");
+
+                var responseBody = await response.Content.ReadAsStringAsync();
+                var createdBook = JsonSerializer.Deserialize<Book>(responseBody, _serializerOptions);
+
+                return createdBook!;
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e.Message);
+                throw; // ou return null si tu préfères, mais attention à gérer ça dans l’appelant
+            }
+        }
 
         // PUT : Mettre à jour un livre
-        public Task<bool> UpdateBookAsync(int id, Book book) =>
-            SendRequestAsync<bool>(HttpMethod.Put, $"/book/{id}", book);
+        public async Task<Book> UpdateBookAsync(int id, Book book)
+        {
+            var json = JsonSerializer.Serialize<Book>(book, _serializerOptions);
 
-        // DELETE : Supprimer un livre
-        public Task<bool> DeleteBookAsync(int id) =>
-            SendRequestAsync<bool>(HttpMethod.Delete, $"/book/{id}");
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await _httpClient.PutAsync($"api/book/{id}", content);
+
+            if (!response.IsSuccessStatusCode)
+                throw new Exception("Erreur lors de la recherche d'un livre");
+            return book!;
+        }
+        public async Task<Book> DeleteBookAsync(int id)
+        {
+            var response = await _httpClient.DeleteAsync($"api/book/{id}");
+            if (!response.IsSuccessStatusCode)
+                throw new Exception("Erreur lors de la recherche d'un livre");
+
+            var json = await response.Content.ReadAsStringAsync();
+            var book = JsonSerializer.Deserialize<Book>(json);
+            return book!;
+        }
     }
 }

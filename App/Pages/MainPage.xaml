@@ -5,10 +5,6 @@
              BackgroundColor="#0B0B0D"
              Title="Passion Lecture">
 
-    
-	<ContentPage.BindingContext>
-		<ViewModel:BookViewModel/>
-	</ContentPage.BindingContext>
 
     
     <Grid RowDefinitions="Auto,*,Auto">

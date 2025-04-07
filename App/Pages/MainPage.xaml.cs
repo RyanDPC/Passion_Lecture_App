@@ -4,13 +4,11 @@ using App.ViewModels;
 namespace App.Pages
 {
     public partial class MainPage : ContentPage
-    {
-        HttpClient _httpClient = new HttpClient();
-
-        public MainPage()
+    {       
+        public MainPage(BookViewModel bookViewModel)
         {
             InitializeComponent();
-            BindingContext = new BookViewModel();
+            BindingContext = bookViewModel;
         }
 
     }
