@@ -5,19 +5,18 @@
              BackgroundColor="#0B0B0D"
              Title="Passion Lecture">
 
+    <ContentPage.BindingContext>
+        <ViewModel:BookViewModel />
+    </ContentPage.BindingContext>
 
-    
     <Grid RowDefinitions="Auto,*,Auto">
-
         <!-- HEADER -->
         <VerticalStackLayout Padding="20,40,20,10" Spacing="20" Grid.Row="0">
-            <!-- Titre -->
             <Label Text="Passion Lecture"
                    FontSize="24"
                    FontAttributes="Bold"
                    TextColor="White" />
 
-            <!-- Barre de recherche -->
             <Frame BackgroundColor="#1C1C24" CornerRadius="10" Padding="0" HasShadow="False" BorderColor="#4F4F60">
                 <Entry Placeholder="Rechercher un livre..." 
                        PlaceholderColor="#B0B0C3"
@@ -26,7 +25,6 @@
                        Margin="10,0" />
             </Frame>
 
-            <!-- Onglets horizontaux -->
             <HorizontalStackLayout HorizontalOptions="Center" Spacing="30">
                 <Label Text="Accueil" TextColor="White" />
                 <Label Text="Découvrir" TextColor="White" />
@@ -45,38 +43,34 @@
                     <Frame CornerRadius="10" Padding="0" Margin="0,10" BackgroundColor="White">
                         <VerticalStackLayout>
                             <!-- Image de couverture -->
-                            <Image Source="{Binding CoverImage}" HeightRequest="200" Aspect="AspectFill"/>
-
-                            <!-- Titre -->
-                            <Label Text="{Binding Name}" 
-                                   FontSize="16" 
-                                   FontAttributes="Bold" 
+                            <Image Source="{Binding CoverImage, Converter={StaticResource BlobToImageConverter}}" HeightRequest="200" Aspect="AspectFill"/>
+                            <!-- Titre du livre -->
+                            <Label Text="{Binding Name}"
+                                   FontSize="16"
+                                   FontAttributes="Bold"
                                    HorizontalTextAlignment="Center"
                                    TextColor="Black"
                                    Margin="10,5,10,0"/>
-
-                            <!-- Note (étoiles) -->
                             <HorizontalStackLayout HorizontalOptions="Center" Spacing="2" Margin="0,5,0,10">
                                 <Image Source="{Binding stars}" HeightRequest="20" />
-
                             </HorizontalStackLayout>
                         </VerticalStackLayout>
                     </Frame>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
-
-        <!-- FOOTER : Barre de navigation + bouton flottant -->
+        
+        <!-- FOOTER : Bouton flottant -->
         <Grid Grid.Row="2">
-            <!-- Floating Button -->
-            <Button Text="+" FontSize="24"
-                    WidthRequest="60" HeightRequest="60"
+            <Button Text="+"
+                    FontSize="24"
+                    WidthRequest="60"
+                    HeightRequest="60"
                     BackgroundColor="#B388FF"
                     CornerRadius="30"
                     HorizontalOptions="End"
                     Margin="20,-30,20,0"
-                    TextColor="White"
-                  />
+                    TextColor="White" />
         </Grid>
     </Grid>
 </ContentPage>

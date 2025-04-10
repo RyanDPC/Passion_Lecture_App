@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection.Metadata;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace App.Models
 {
@@ -28,14 +24,16 @@ namespace App.Models
     public class Book
     {
         public string Id { get; set; } = Guid.NewGuid().ToString();
-        
-        public string name { get; set; }
-        public string passage { get; set; }
-        public string summary { get; set; }
+        public string Name { get; set; }
+        public string Passage { get; set; }
+        public int EditionYear { get; set; }
         public int editionYear { get; set; }
-        public Blob coverImage { get; set; }
-        public int pages { get; set; }
-
+        public Blob CoverImage { get; set; }
+        public int Pages { get; set; }
+        public int CategoryFk { get; set; }
+        public int EditorFk { get; set; }
+        public int AuthorFk { get; set; }
+        public int? UserFk { get; set; }
         public DateTime Created { get; set; }
     }
 }

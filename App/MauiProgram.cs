@@ -19,8 +19,9 @@ public static class MauiProgram
 
 			});
         builder.Services.AddSingleton<BookViewModel>();
-		builder.Services.AddSingleton<BookApi>();
-		builder.Services.AddSingleton<MainPage>();
+        builder.Services.AddSingleton<HttpClient>();
+        builder.Services.AddSingleton<BookApi>();
+        builder.Services.AddSingleton<MainPage>();
 #if DEBUG
 		builder.Logging.AddDebug();
 #endif

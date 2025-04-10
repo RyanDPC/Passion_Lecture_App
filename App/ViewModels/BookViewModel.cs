@@ -1,48 +1,42 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.ObjectModel;
 using System.Threading.Tasks;
-using App.Services;
 using App.Models;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using System.Net.Http;
+using App.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace App.ViewModels
 {
-    public partial class BookViewModel : ObservableObject
+    public class BookViewModel : BindableObject
     {
-        private readonly BookApi _api;
+        private ObservableCollection<Book> _books;
+        private readonly BookApi _bookApi;
 
-        // Propriété observable pour les livres
-        [ObservableProperty]
-        private ObservableCollection<Book> books = new();
+        public ObservableCollection<Book> Books
+        {
+            get => _books;
+            set
+            {
+                _books = value;
+                OnPropertyChanged();
+            }
+        }
 
-        // Commande pour charger les livres
-        [RelayCommand]
+        public BookViewModel()
+        {
+            // Utilisation du service BookApi via l'injection de dépendances (via IServiceProvider)
+            _bookApi = DependencyService.Get<BookApi>();
+            _books = new ObservableCollection<Book>();
+            LoadBooksAsync();
+        }
+
         private async Task LoadBooksAsync()
         {
-            try
+            var books = await _bookApi.GetBooksAsync();
+            Books.Clear();
+            foreach (var book in books)
             {
-                var allBooks = await _api.GetAllBooksAsync();
-                Books = new ObservableCollection<Book>((IEnumerable<Book>)allBooks);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Erreur API : {ex.Message}");
+                Books.Add(book);
             }
         }
-
-        // Constructeur pour l'injection de dépendances
-        public BookViewModel(BookApi api)
-        {
-            _api = api;
-            LoadBooksCommand.Execute(null); // Charge les livres au démarrage
-        }
-
-        // Commande asynchrone pour charger les livres
-        public IAsyncRelayCommand LoadBooksCommand { get; }
     }
 }
