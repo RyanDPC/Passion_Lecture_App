@@ -51,9 +51,9 @@
                     <Grid Padding="0" Margin="0,10" BackgroundColor="White">
                         <VerticalStackLayout>
                             <!-- Image de couverture -->
-                            <Image Source="{Binding CoverImage, Converter={StaticResource BlobToImageConverter}}"
-                                   HeightRequest="200"
-                                   Aspect="AspectFill"/>
+                            <Image Source="{Binding ImageSource}"
+                                    HeightRequest="200"
+                                    Aspect="AspectFill"/>
                             <!-- Titre du livre -->
                             <Label Text="{Binding Name}"
                                    FontSize="16"

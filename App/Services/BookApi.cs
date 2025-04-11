@@ -2,6 +2,7 @@
 using System.Text.Json;
 using System.Threading.Tasks;
 using App.Models;
+using System.Collections.Generic;
 
 public class BookApi
 {
@@ -9,38 +10,109 @@ public class BookApi
     {
         BaseAddress = new Uri("http://10.0.2.2:443")
     };
-        public async Task<List<Book>> GetBooksAsync()
+
+    // Récupérer les livres par nom
+    public async Task<List<Book>> GetBooksByNameAsync(string name)
+    {
+        try
         {
-            try
+            var response = await _httpClient.GetAsync($"api/book?name={name}");
+            var data = await response.Content.ReadAsStringAsync();
+
+            if (string.IsNullOrEmpty(data))
             {
-                var response = await _httpClient.GetAsync("api/book");
-                var data = await response.Content.ReadAsStringAsync();
-
-                // Affiche la réponse brute de l'API pour débogage
-                Console.WriteLine("Réponse brute de l'API : " + data);
-
-                if (string.IsNullOrEmpty(data))
-                {
-                    Console.WriteLine("Erreur de sérialisation ou liste vide");
-                    return new List<Book>();
-                }
-
-                // Désérialisation de la réponse JSON en ApiResponse
-                var apiResponse = JsonSerializer.Deserialize<ApiResponse>(data);
-
-                // Vérifier si la liste des livres existe et est valide
-                if (apiResponse == null || apiResponse.Book == null || apiResponse.Book.Count == 0)
-                {
-                    Console.WriteLine("Aucun livre trouvé.");
-                    return new List<Book>();
-                }
-
-                return apiResponse.Book;
-            }
-            catch (HttpRequestException ex)
-            {
-                Console.WriteLine($"Erreur lors de la requête HTTP : {ex.Message}");
                 return new List<Book>();
             }
+
+            var apiResponse = JsonSerializer.Deserialize<ApiResponse>(data);
+
+            return apiResponse?.Book ?? new List<Book>();
+        }
+        catch
+        {
+            return new List<Book>();
         }
     }
+
+    // Récupérer les livres par date d'ajout
+    public async Task<List<Book>> GetBooksByDateAddedAsync()
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync("api/book?sortByDate=true");
+            var data = await response.Content.ReadAsStringAsync();
+
+            if (string.IsNullOrEmpty(data))
+            {
+                return new List<Book>();
+            }
+
+            var apiResponse = JsonSerializer.Deserialize<ApiResponse>(data);
+
+            return apiResponse?.Book ?? new List<Book>();
+        }
+        catch
+        {
+            return new List<Book>();
+        }
+    }
+
+    // Récupérer les livres créés par un utilisateur spécifique (avec UserFk)
+    public async Task<List<Book>> GetBooksByUserIdAsync(int userId)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync($"api/book?userId={userId}");
+            var data = await response.Content.ReadAsStringAsync();
+
+            if (string.IsNullOrEmpty(data))
+            {
+                return new List<Book>();
+            }
+
+            var apiResponse = JsonSerializer.Deserialize<ApiResponse>(data);
+
+            return apiResponse?.Book ?? new List<Book>();
+        }
+        catch
+        {
+            return new List<Book>();
+        }
+    }
+
+    // Récupérer tous les livres
+    public async Task<List<Book>> GetAllBooksAsync()
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync("api/book");
+            var data = await response.Content.ReadAsStringAsync();
+
+            if (string.IsNullOrEmpty(data))
+            {
+                return new List<Book>();
+            }
+
+            var apiResponse = JsonSerializer.Deserialize<ApiResponse>(data);
+
+            return apiResponse?.Book ?? new List<Book>();
+        }
+        catch
+        {
+            return new List<Book>();
+        }
+    }
+
+    // Méthode pour créer un livre
+    public async Task CreateBookAsync(Book book)
+    {
+        try
+        {
+            var content = new StringContent(JsonSerializer.Serialize(book), System.Text.Encoding.UTF8, "application/json");
+            await _httpClient.PostAsync("api/book", content);
+        }
+        catch
+        {
+        }
+    }
+}
