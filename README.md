@@ -66,3 +66,6 @@ Un ensemble d’ebooks au format **epub** est fourni via le **Market-Place** et 
 
 ## Évaluation
 L’évaluation se fera selon le **règlement pratique de l’ETML**.
+
+### **Journal de Travail** 
+Ryan De Pina Correia: [Journal de travail](https://eduvaud-my.sharepoint.com/:x:/g/personal/pa70iyc_eduvaud_ch/EXRRMssXBB5MkTgF58yUXkABxPcZjr6sjVkpHdYSy2oOrw?e=4oPhZi)
