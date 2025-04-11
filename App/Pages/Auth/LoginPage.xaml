@@ -1,0 +1,55 @@
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="App.Pages.Auth.LoginPage"
+             BackgroundColor="#0B0B0D"
+             Title="Connexion">
+
+    <VerticalStackLayout Padding="30" Spacing="25"
+                         VerticalOptions="CenterAndExpand"
+                         HorizontalOptions="CenterAndExpand">
+
+        <!-- Titre -->
+        <Label Text="Connexion"
+               FontSize="28"
+               FontAttributes="Bold"
+               TextColor="White"
+               HorizontalOptions="Center" />
+
+        <!-- Email -->
+        <Frame BackgroundColor="#1C1C24" CornerRadius="10" Padding="10" HasShadow="False" BorderColor="#4F4F60">
+            <Entry Placeholder="Adresse e-mail"
+                   PlaceholderColor="#B0B0C3"
+                   TextColor="White"
+                   Keyboard="Email"
+                   BackgroundColor="Transparent" />
+        </Frame>
+
+        <!-- Mot de passe -->
+        <Frame BackgroundColor="#1C1C24" CornerRadius="10" Padding="10" HasShadow="False" BorderColor="#4F4F60">
+            <Entry Placeholder="Mot de passe"
+                   PlaceholderColor="#B0B0C3"
+                   TextColor="White"
+                   IsPassword="True"
+                   BackgroundColor="Transparent" />
+        </Frame>
+
+        <!-- Bouton Connexion -->
+        <Button Text="Se connecter"
+                BackgroundColor="#B388FF"
+                TextColor="White"
+                FontAttributes="Bold"
+                CornerRadius="10"
+                Padding="10" />
+
+        <!-- Lien vers l'inscription -->
+        <HorizontalStackLayout HorizontalOptions="Center">
+            <Label Text="Pas encore de compte ?" TextColor="#B0B0C3" />
+            <Label Text="S'inscrire"
+                   TextColor="#B388FF"
+                   FontAttributes="Bold"
+                   Margin="5,0"
+                   />
+        </HorizontalStackLayout>
+
+    </VerticalStackLayout>
+</ContentPage>
