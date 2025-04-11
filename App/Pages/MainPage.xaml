@@ -16,19 +16,27 @@
                    FontSize="24"
                    FontAttributes="Bold"
                    TextColor="White" />
-
-            <Frame BackgroundColor="#1C1C24" CornerRadius="10" Padding="0" HasShadow="False" BorderColor="#4F4F60">
-                <Entry Placeholder="Rechercher un livre..." 
-                       PlaceholderColor="#B0B0C3"
-                       TextColor="White"
-                       BackgroundColor="Transparent"
-                       Margin="10,0" />
-            </Frame>
-
+            <Border Stroke="#4F4F60"
+                    StrokeThickness="1"
+                    Margin="10,0">
+                <Grid BackgroundColor="#1C1C24">
+                    <Entry Placeholder="Rechercher un livre..." 
+                           PlaceholderColor="#B0B0C3"
+                           TextColor="White"
+                           BackgroundColor="Transparent"
+                           Margin="10,0"/>
+                </Grid>
+            </Border>
             <HorizontalStackLayout HorizontalOptions="Center" Spacing="30">
-                <Label Text="Accueil" TextColor="White" />
-                <Label Text="Découvrir" TextColor="White" />
-                <Label Text="Mes Livres" TextColor="White" />
+                <Label Text="Accueil"
+                       TextColor="White"
+                       FontSize="14"/>
+                <Label Text="Découvrir"
+                       TextColor="White"
+                       FontSize="14"/>
+                <Label Text="Mes Livres"
+                       TextColor="White"
+                       FontSize="14"/>
             </HorizontalStackLayout>
         </VerticalStackLayout>
 
@@ -40,10 +48,12 @@
                         Margin="20,10">
             <CollectionView.ItemTemplate>
                 <DataTemplate>
-                    <Frame CornerRadius="10" Padding="0" Margin="0,10" BackgroundColor="White">
+                    <Grid Padding="0" Margin="0,10" BackgroundColor="White">
                         <VerticalStackLayout>
                             <!-- Image de couverture -->
-                            <Image Source="{Binding CoverImage, Converter={StaticResource BlobToImageConverter}}" HeightRequest="200" Aspect="AspectFill"/>
+                            <Image Source="{Binding CoverImage, Converter={StaticResource BlobToImageConverter}}"
+                                   HeightRequest="200"
+                                   Aspect="AspectFill"/>
                             <!-- Titre du livre -->
                             <Label Text="{Binding Name}"
                                    FontSize="16"
@@ -55,11 +65,11 @@
                                 <Image Source="{Binding stars}" HeightRequest="20" />
                             </HorizontalStackLayout>
                         </VerticalStackLayout>
-                    </Frame>
+                    </Grid>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
-        
+
         <!-- FOOTER : Bouton flottant -->
         <Grid Grid.Row="2">
             <Button Text="+"

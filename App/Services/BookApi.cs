@@ -1,42 +1,46 @@
-﻿using System.Collections.Generic;
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using App.Models;
-using Microsoft.Extensions.Logging;
 
-namespace App.Services
+public class BookApi
 {
-    public class BookApi
+    private static readonly HttpClient _httpClient = new HttpClient
     {
-        private readonly HttpClient _httpClient;
-        private readonly ILogger<BookApi> _logger;
-
-        public BookApi(IHttpClientFactory httpClientFactory, ILogger<BookApi> logger)
-        {
-            _httpClient = httpClientFactory.CreateClient();
-            _logger = logger;
-        }
-
+        BaseAddress = new Uri("http://10.0.2.2:443")
+    };
         public async Task<List<Book>> GetBooksAsync()
         {
             try
             {
-                var response = await _httpClient.GetStringAsync("http://10.0.2.2:443/api/book");
-                var apiResponse = JsonSerializer.Deserialize<ApiResponse>(response);
-                return apiResponse?.Book ?? new List<Book>();
+                var response = await _httpClient.GetAsync("api/book");
+                var data = await response.Content.ReadAsStringAsync();
+
+                // Affiche la réponse brute de l'API pour débogage
+                Console.WriteLine("Réponse brute de l'API : " + data);
+
+                if (string.IsNullOrEmpty(data))
+                {
+                    Console.WriteLine("Erreur de sérialisation ou liste vide");
+                    return new List<Book>();
+                }
+
+                // Désérialisation de la réponse JSON en ApiResponse
+                var apiResponse = JsonSerializer.Deserialize<ApiResponse>(data);
+
+                // Vérifier si la liste des livres existe et est valide
+                if (apiResponse == null || apiResponse.Book == null || apiResponse.Book.Count == 0)
+                {
+                    Console.WriteLine("Aucun livre trouvé.");
+                    return new List<Book>();
+                }
+
+                return apiResponse.Book;
             }
             catch (HttpRequestException ex)
             {
-                _logger.LogError(ex, "Erreur lors de la récupération des livres");
+                Console.WriteLine($"Erreur lors de la requête HTTP : {ex.Message}");
                 return new List<Book>();
             }
         }
     }
-
-    public class ApiResponse
-    {
-        public string Message { get; set; }
-        public List<Book> Book { get; set; }
-    }
-}

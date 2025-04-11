@@ -1,42 +1,50 @@
 ﻿using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using App.Models;
-using App.Services;
-using Microsoft.Extensions.DependencyInjection;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace App.ViewModels
 {
-    public class BookViewModel : BindableObject
+    public partial class BookViewModel : ObservableObject
     {
-        private ObservableCollection<Book> _books;
-        private readonly BookApi _bookApi;
+        [ObservableProperty]
+        private ObservableCollection<Book> books = new();
 
-        public ObservableCollection<Book> Books
-        {
-            get => _books;
-            set
-            {
-                _books = value;
-                OnPropertyChanged();
-            }
-        }
+        private readonly BookApi _bookApi = new();
 
         public BookViewModel()
         {
-            // Utilisation du service BookApi via l'injection de dépendances (via IServiceProvider)
-            _bookApi = DependencyService.Get<BookApi>();
-            _books = new ObservableCollection<Book>();
             LoadBooksAsync();
         }
 
         private async Task LoadBooksAsync()
         {
-            var books = await _bookApi.GetBooksAsync();
-            Books.Clear();
-            foreach (var book in books)
+            try
             {
-                Books.Add(book);
+                var result = await _bookApi.GetBooksAsync();
+
+                // Vérifie si la requête renvoie des livres
+                Console.WriteLine($"Livres récupérés : {result.Count}");
+
+                Books.Clear();
+                if (result.Count == 0)
+                {
+                    Console.WriteLine("Aucun livre trouvé.");
+                }
+
+                foreach (var book in result)
+                {
+                    Console.WriteLine($"Livre ajouté : {book.Name}");
+                    Books.Add(book);
+                }
+
+                Console.WriteLine($"Total des livres chargés : {Books.Count}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erreur lors du chargement des livres: {ex.Message}");
             }
         }
+
     }
 }

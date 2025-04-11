@@ -1,5 +1,4 @@
-﻿using App.Services;
-
+﻿using App.ViewModels;
 namespace App.Pages
 {
     public partial class MainPage : ContentPage

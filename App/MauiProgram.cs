@@ -1,5 +1,4 @@
 ﻿using App.Pages;
-using App.Services;
 using App.ViewModels;
 using Microsoft.Extensions.Logging;
 using App.Interface;
@@ -21,7 +20,6 @@ public static class MauiProgram
         builder.Services.AddSingleton<BookViewModel>();
         builder.Services.AddSingleton<HttpClient>();
         builder.Services.AddSingleton<BookApi>();
-        builder.Services.AddSingleton<MainPage>();
 #if DEBUG
 		builder.Logging.AddDebug();
 #endif
