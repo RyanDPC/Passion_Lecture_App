@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 using App.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System;
+using System.Xml.Linq;
+using System.Diagnostics;
+using System.Text.Json;
 
 namespace App.ViewModels
 {
@@ -19,15 +22,12 @@ namespace App.ViewModels
         {
             LoadBooksAsync();
         }
-
         // Charger les livres depuis l'API
         private async Task LoadBooksAsync()
         {
             try
             {
                 var result = await _bookApi.GetAllBooksAsync();
-
-                Console.WriteLine($"Livres récupérés : {result.Count}");
 
                 Books.Clear();
                 if (result.Count == 0)
@@ -37,12 +37,14 @@ namespace App.ViewModels
 
                 foreach (var book in result)
                 {
-                    if (book.CoverImage != null && book.CoverImage.Length > 0)
-                    {
-                        var imageSource = ImageSource.FromStream(() => new MemoryStream(book.CoverImage));
-                        book.ImageSource = imageSource;
-                    }
+                    string imageName = $"/Resources/Images/a{book.Id}.png";
+                    book.CoverImage = ImageSource.FromFile(imageName);
+
                     Books.Add(book);
+
+                    Debug.WriteLine($"Livre ajouté : {book.Name}");
+                    string json = JsonSerializer.Serialize(book);
+                    Debug.WriteLine($"Contenu JSON du livre : {json}");
                 }
 
                 Console.WriteLine($"Total des livres chargés : {Books.Count}");
@@ -52,44 +54,11 @@ namespace App.ViewModels
                 Console.WriteLine($"Erreur lors du chargement des livres: {ex.Message}");
             }
         }
-
-        // Convertir une image en base64
-        public string ConvertImageToBase64(ImageSource imageSource)
+            
+        public async Task AddBookAsync(string name, string passage, string summary, int editionYear, ImageSource coverImage)
         {
             try
             {
-                if (imageSource is FileImageSource fileImageSource)
-                {
-                    var imagePath = fileImageSource.File;
-                    var imageBytes = File.ReadAllBytes(imagePath);
-                    return Convert.ToBase64String(imageBytes);
-                }
-
-                if (imageSource is StreamImageSource streamImageSource)
-                {
-                    using (var memoryStream = new MemoryStream())
-                    {
-                        var stream = streamImageSource.Stream(CancellationToken.None).Result;
-                        stream.CopyTo(memoryStream);
-                        return Convert.ToBase64String(memoryStream.ToArray());
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Erreur de conversion de l'image : {ex.Message}");
-            }
-
-            return null;
-        }
-
-        // Ajouter un livre avec une image en base64
-        public async Task AddBookAsync(string name, string passage, string summary, int editionYear, byte[] coverImage)
-        {
-            try
-            {
-                // Convertir l'image en Base64
-                var coverImageBase64 = Convert.ToBase64String(coverImage);
 
                 var newBook = new Book
                 {
@@ -97,8 +66,7 @@ namespace App.ViewModels
                     Passage = passage,
                     Summary = summary,
                     EditionYear = editionYear,
-                    CoverImage = coverImage,
-                    CoverImageBase64 = coverImageBase64
+                    CoverImage = coverImage
                 };
 
                 await _bookApi.CreateBookAsync(newBook);

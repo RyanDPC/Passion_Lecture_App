@@ -25,20 +25,40 @@ namespace App.Models
 
     public class Book
     {
+        [JsonPropertyName("id")]
         public int Id { get; set; }
-        public string Name { get; set; }
-        public string Passage { get; set; }
-        public string Summary { get; set; }
-        public int EditionYear { get; set; }
-        public byte[] CoverImage { get; set; }
-        public string CoverImageBase64 {  get; set; }
-        public ImageSource ImageSource { get; set; }
 
+        [JsonPropertyName("name")]
+        public string Name { get; set; }
+
+        [JsonPropertyName("passage")]
+        public string Passage { get; set; }
+
+        [JsonPropertyName("summary")]
+        public string Summary { get; set; }
+
+        [JsonPropertyName("editionYear")]
+        public int EditionYear { get; set; }
+
+        [JsonPropertyName("coverImage")]
+        public ImageSource CoverImage { get; set; }
+
+        [JsonPropertyName("pages")]
         public int Pages { get; set; }
+
+        [JsonPropertyName("created")]
         public DateTime Created { get; set; }
+
+        [JsonPropertyName("category_fk")]
         public int CategoryFk { get; set; }
+
+        [JsonPropertyName("edition_fk")]
         public int EditorFk { get; set; }
+
+        [JsonPropertyName("author_fk")]
         public int AuthorFk { get; set; }
+
+        [JsonPropertyName("user_fk")]
         public int? UserFk { get; set; }
     }
 
