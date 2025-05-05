@@ -1,5 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Maui.Controls;
 
 namespace App.Models
 {
@@ -41,9 +45,7 @@ namespace App.Models
         public int EditionYear { get; set; }
 
         [JsonPropertyName("coverImage")]
-        public ImageSource CoverImage { get; set; }
-
-        [JsonPropertyName("pages")]
+        public byte[] CoverImage { get; set; }
         public int Pages { get; set; }
 
         [JsonPropertyName("created")]
@@ -64,9 +66,11 @@ namespace App.Models
 
     public class ApiResponse
     {
+        [JsonPropertyName("message")]
         public string Message { get; set; }
 
         [JsonPropertyName("book")]
         public List<Book> Book { get; set; }
     }
+
 }
