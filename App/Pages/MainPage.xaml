@@ -1,6 +1,7 @@
 ﻿<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:ViewModel="clr-namespace:App.ViewModels"
+             xmlns:conv="clr-namespace:App.Helper"
              x:Class="App.Pages.MainPage"
              BackgroundColor="#0B0B0D"
              Title="Passion Lecture">
@@ -8,6 +9,11 @@
     <ContentPage.BindingContext>
         <ViewModel:BookViewModel />
     </ContentPage.BindingContext>
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <conv:ByteArrayToImageConverter x:Key="ByteArrayToImageConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
 
     <Grid RowDefinitions="Auto,*,Auto">
         <!-- HEADER -->
@@ -44,15 +50,14 @@
         <CollectionView x:Name="BooksCollection"
                         Grid.Row="1"
                         ItemsSource="{Binding Books}"
-                        VerticalOptions="FillAndExpand"
                         Margin="20,10">
             <CollectionView.ItemTemplate>
                 <DataTemplate>
-                    <Grid Padding="0" Margin="0,10" BackgroundColor="White">
+                    <Grid Padding="0" Margin="0,10">
                         <VerticalStackLayout>
                             <!-- Image de couverture -->
-                            <Image Source="{Binding CoverImage}"
-                                    HeightRequest="200"
+                            <Image Source="{Binding CoverImage, Converter={StaticResource ByteArrayToImageConverter}}"
+                                   HeightRequest="200"
                                     Aspect="AspectFill"/>
                             <!-- Titre du livre -->
                             <Label Text="{Binding Name}"
