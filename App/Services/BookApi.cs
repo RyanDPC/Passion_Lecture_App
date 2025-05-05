@@ -8,8 +8,9 @@ public class BookApi
 {
     private static readonly HttpClient _httpClient = new HttpClient
     {
-        BaseAddress = new Uri("http://10.0.2.2:8080")
+        BaseAddress = new Uri("http://10.0.2.2:8080/")
     };
+    private readonly JsonSerializerOptions _jsonOptions;
 
     // Récupérer les livres par nom
     public async Task<List<Book>> GetBooksByNameAsync(string name)
@@ -71,7 +72,6 @@ public class BookApi
             }
 
             var apiResponse = JsonSerializer.Deserialize<ApiResponse>(data);
-
             return apiResponse?.Book ?? new List<Book>();
         }
         catch
@@ -83,24 +83,13 @@ public class BookApi
     // Récupérer tous les livres
     public async Task<List<Book>> GetAllBooksAsync()
     {
-        try
-        {
-            var response = await _httpClient.GetAsync("api/book");
-            var data = await response.Content.ReadAsStringAsync();
+        var response = await _httpClient.GetAsync("api/book");
+        response.EnsureSuccessStatusCode();
 
-            if (string.IsNullOrEmpty(data))
-            {
-                return new List<Book>();
-            }
+        using var contentStream = await response.Content.ReadAsStreamAsync();
+        var apiResponse = await JsonSerializer.DeserializeAsync<ApiResponse>(contentStream, _jsonOptions);
 
-            var apiResponse = JsonSerializer.Deserialize<ApiResponse>(data);
-
-            return apiResponse?.Book ?? new List<Book>();
-        }
-        catch
-        {
-            return new List<Book>();
-        }
+        return apiResponse?.Book ?? new List<Book>();
     }
 
     // Méthode pour créer un livre
