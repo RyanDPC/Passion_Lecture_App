@@ -62,6 +62,9 @@ namespace App.Models
 
         [JsonPropertyName("user_fk")]
         public int? UserFk { get; set; }
+        public User User { get; set; }
+        public int LastReadPage { get; set; } = 1;
+
     }
 
     public class ApiResponse

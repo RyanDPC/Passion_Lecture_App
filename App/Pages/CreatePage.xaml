@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:ViewModel="clr-namespace:App.ViewModels"
+    xmlns:conv="clr-namespace:App.Helper"
     x:Class="App.Pages.CreatePage"
     BackgroundColor="#0B0B0D"
     Title="Créer un livre">
@@ -11,12 +12,17 @@
     <ContentPage.BindingContext>
         <ViewModel:BookViewModel />
     </ContentPage.BindingContext>
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <conv:ByteArrayToImageConverter x:Key="ByteArrayToImageConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
     <Grid RowDefinitions="Auto,*,Auto" ColumnDefinitions="*" >
 
         <!-- ========== HEADER ========== -->
         <VerticalStackLayout 
             Grid.Row="0"
-            Padding="20,40,20,10" 
+            Padding="20,0,20,10" 
             Spacing="16">
 
             <Label Text="Passion Lecture"
@@ -85,7 +91,7 @@
                         CornerRadius="10"
                         Padding="0"
                         BackgroundColor="#231F2E">
-                        <Image Source="{Binding CoverImage}"
+                        <Image Source="{Binding CoverImage, Converter={StaticResource ByteArrayToImageConverter}}"
                                Aspect="AspectFill"/>
                     </Frame>
 
@@ -99,7 +105,7 @@
 
                 <!-- Publier -->
                 <Button Text="Publier"
-                        Command="{Binding AddBookAsyncCommand}"
+                        Command="{Binding AddBookCommand}"
                         BackgroundColor="#9C82F0"
                         TextColor="White"
                         CornerRadius="10"

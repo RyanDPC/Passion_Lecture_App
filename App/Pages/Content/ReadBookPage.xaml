@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:ViewModel="clr-namespace:App.ViewModels"
+             x:Class="App.Pages.Content.ReadBookPage"
+             Title="ReadBookPage">
+
+    <VerticalStackLayout Padding="20" Spacing="20">
+        <Label Text="Page actuelle :" FontAttributes="Bold" />
+        <Label Text="{Binding CurrentPage}" FontSize="28" />
+
+        <Label Text="{Binding Book.Passage}" FontSize="16" LineBreakMode="WordWrap" />
+
+        <HorizontalStackLayout Spacing="15">
+            <Button Text="⬅️ Page précédente" Command="{Binding PreviousPageCommand}" />
+            <Button Text="Page suivante ➡️" Command="{Binding NextPageCommand}" />
+        </HorizontalStackLayout>
+    </VerticalStackLayout>
+</ContentPage>

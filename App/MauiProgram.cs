@@ -1,7 +1,9 @@
 ﻿using App.Pages;
 using App.ViewModels;
+using App.Services;
 using Microsoft.Extensions.Logging;
 using App.Interface;
+using CommunityToolkit.Maui;
 namespace App;
 
 public static class MauiProgram
@@ -9,8 +11,8 @@ public static class MauiProgram
 	public static MauiApp CreateMauiApp()
 	{
 		var builder = MauiApp.CreateBuilder();
-		builder
-			.UseMauiApp<App>()
+		builder.UseMauiApp<App>()
+			.UseMauiCommunityToolkit()
 			.ConfigureFonts(fonts =>
 			{
 				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
