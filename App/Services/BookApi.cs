@@ -12,7 +12,10 @@ namespace App.Services
         {
             BaseAddress = new Uri("http://10.0.2.2:443/")
         };
-        private readonly JsonSerializerOptions _jsonOptions;
+        private readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
 
         // Récupérer les livres par nom
         public async Task<List<Book>> GetBooksByNameAsync(string name)
@@ -27,12 +30,13 @@ namespace App.Services
                     return new List<Book>();
                 }
 
-                var apiResponse = JsonSerializer.Deserialize<ApiResponse>(data);
+                var apiResponse = JsonSerializer.Deserialize<ApiResponse>(data, _jsonOptions);
 
                 return apiResponse?.Book ?? new List<Book>();
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine($"Erreur lors de la récupération des livres par nom : {ex.Message}");
                 return new List<Book>();
             }
         }
@@ -46,11 +50,12 @@ namespace App.Services
                 {
                     return new List<Book>();
                 }
-                var apiResponse = JsonSerializer.Deserialize<ApiResponse>(data);
+                var apiResponse = JsonSerializer.Deserialize<ApiResponse>(data, _jsonOptions);
                 return apiResponse?.Book ?? new List<Book>();
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine($"Erreur lors de la récupération du livre par ID : {ex.Message}");
                 return new List<Book>();
             }
         }
@@ -68,12 +73,13 @@ namespace App.Services
                     return new List<Book>();
                 }
 
-                var apiResponse = JsonSerializer.Deserialize<ApiResponse>(data);
+                var apiResponse = JsonSerializer.Deserialize<ApiResponse>(data, _jsonOptions);
 
                 return apiResponse?.Book ?? new List<Book>();
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine($"Erreur lors de la récupération des livres par date : {ex.Message}");
                 return new List<Book>();
             }
         }
@@ -91,11 +97,12 @@ namespace App.Services
                     return new List<Book>();
                 }
 
-                var apiResponse = JsonSerializer.Deserialize<ApiResponse>(data);
+                var apiResponse = JsonSerializer.Deserialize<ApiResponse>(data, _jsonOptions);
                 return apiResponse?.Book ?? new List<Book>();
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine($"Erreur lors de la récupération des livres par utilisateur : {ex.Message}");
                 return new List<Book>();
             }
         }
@@ -103,13 +110,22 @@ namespace App.Services
         // Récupérer tous les livres
         public async Task<List<Book>> GetAllBooksAsync()
         {
-            var response = await _httpClient.GetAsync("api/book");
-            response.EnsureSuccessStatusCode();
+            try
+            {
+                var response = await _httpClient.GetAsync("api/book");
+                response.EnsureSuccessStatusCode();
 
-            using var contentStream = await response.Content.ReadAsStreamAsync();
-            var apiResponse = await JsonSerializer.DeserializeAsync<ApiResponse>(contentStream, _jsonOptions);
+                // Utiliser ReadAsStringAsync au lieu de ReadAsStreamAsync car il fonctionne mieux avec notre convertisseur personnalisé
+                var data = await response.Content.ReadAsStringAsync();
+                var apiResponse = JsonSerializer.Deserialize<ApiResponse>(data, _jsonOptions);
 
-            return apiResponse?.Book ?? new List<Book>();
+                return apiResponse?.Book ?? new List<Book>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erreur lors du chargement des livres: {ex.Message}");
+                return new List<Book>();
+            }
         }
 
         // Méthode pour créer un livre
@@ -120,8 +136,9 @@ namespace App.Services
                 var content = new StringContent(JsonSerializer.Serialize(book), System.Text.Encoding.UTF8, "application/json");
                 await _httpClient.PostAsync("api/book", content);
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine($"Erreur lors de la création du livre : {ex.Message}");
             }
         }
     }

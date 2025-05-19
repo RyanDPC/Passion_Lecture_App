@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using App.Models;
 using App.Services;
@@ -96,4 +96,4 @@ namespace App.Database
                 .UsingEntity(j => j.ToTable("BookTags"));
         }
     }
-}
+} 

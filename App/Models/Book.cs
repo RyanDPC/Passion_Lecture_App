@@ -4,7 +4,7 @@ using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Maui.Controls;
-
+using App.Helper;
 namespace App.Models
 {
     public enum RatingBook
@@ -33,7 +33,7 @@ namespace App.Models
         public int Id { get; set; }
 
         [JsonPropertyName("name")]
-        public string Name { get; set; }
+        public string Name { get; set; }    
 
         [JsonPropertyName("passage")]
         public string Passage { get; set; }
@@ -46,6 +46,7 @@ namespace App.Models
 
         [JsonPropertyName("coverImage")]
         public byte[] CoverImage { get; set; }
+
         public int Pages { get; set; }
 
         [JsonPropertyName("created")]
@@ -65,6 +66,10 @@ namespace App.Models
         public User User { get; set; }
         public int LastReadPage { get; set; } = 1;
 
+        public ICollection<Tag> Tags { get; set; }
+        
+        [JsonPropertyName("t_comments")]
+        public ICollection<Comment> Comments { get; set; }
     }
 
     public class ApiResponse

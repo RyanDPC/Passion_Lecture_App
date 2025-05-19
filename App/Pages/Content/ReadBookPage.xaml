@@ -2,18 +2,130 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:ViewModel="clr-namespace:App.ViewModels"
+             xmlns:conv="clr-namespace:App.Helper"
              x:Class="App.Pages.Content.ReadBookPage"
-             Title="ReadBookPage">
+             BackgroundColor="#F5F5F5"
+             Title="Lecture">
 
-    <VerticalStackLayout Padding="20" Spacing="20">
-        <Label Text="Page actuelle :" FontAttributes="Bold" />
-        <Label Text="{Binding CurrentPage}" FontSize="28" />
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <conv:ByteArrayToImageConverter x:Key="ByteArrayToImageConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
 
-        <Label Text="{Binding Book.Passage}" FontSize="16" LineBreakMode="WordWrap" />
+    <Grid RowDefinitions="Auto,*,Auto" Padding="20">
+        <!-- En-tête avec informations du livre -->
+        <Grid Grid.Row="0" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" Margin="0,0,0,20">
+            <!-- Couverture du livre -->
+            <Image Grid.Column="0" Grid.RowSpan="4"
+                   Source="{Binding Book.CoverImage, Converter={StaticResource ByteArrayToImageConverter}}"
+                   HeightRequest="120"
+                   WidthRequest="80"
+                   Aspect="AspectFill"
+                   Margin="0,0,15,0" />
+            
+            <!-- Titre du livre -->
+            <Label Grid.Column="1" Grid.Row="0"
+                   Text="{Binding Book.Name}"
+                   FontSize="20"
+                   FontAttributes="Bold"
+                   LineBreakMode="TailTruncation" />
+            
+            <!-- Tags -->
+            <CollectionView Grid.Column="1" Grid.Row="1"
+                            ItemsSource="{Binding BookTags}"
+                            HeightRequest="30"
+                            HorizontalScrollBarVisibility="Never">
+                <CollectionView.ItemsLayout>
+                    <LinearItemsLayout Orientation="Horizontal" ItemSpacing="5" />
+                </CollectionView.ItemsLayout>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Frame BackgroundColor="#9C82F0"
+                               CornerRadius="15"
+                               Padding="8,2"
+                               HeightRequest="22">
+                            <Label Text="{Binding Name}"
+                                   TextColor="White"
+                                   FontSize="10" />
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+            
+            <!-- Pagination -->
+            <Label Grid.Column="1" Grid.Row="2" 
+                   Text="{Binding CurrentPageText}" 
+                   FontSize="14"
+                   TextColor="Gray" />
 
-        <HorizontalStackLayout Spacing="15">
-            <Button Text="⬅️ Page précédente" Command="{Binding PreviousPageCommand}" />
-            <Button Text="Page suivante ➡️" Command="{Binding NextPageCommand}" />
-        </HorizontalStackLayout>
-    </VerticalStackLayout>
+            <!-- Barre de progression -->
+            <ProgressBar Grid.Column="1" Grid.Row="3"
+                         Progress="{Binding ReadingProgress}"
+                         ProgressColor="#9C82F0"
+                         HeightRequest="8"
+                         Margin="0,5,0,0" />
+        </Grid>
+
+        <!-- Contenu principal -->
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Spacing="20">
+                <!-- Titre de la page -->
+                <Label Text="{Binding CurrentPageTitle}"
+                       FontSize="18"
+                       FontAttributes="Bold"
+                       HorizontalOptions="Center"
+                       IsVisible="{Binding HasPageTitles}"
+                       Margin="0,0,0,10" />
+
+                <!-- Contenu de la page -->
+                <Label Text="{Binding CurrentPageContent}" 
+                       FontSize="17"
+                       LineBreakMode="WordWrap"
+                       FontFamily="Bookerly"
+                       LineHeight="1.4" />
+                       
+                <!-- Informations supplémentaires à la fin du passage -->
+                <BoxView HeightRequest="1" 
+                         BackgroundColor="#E0E0E0"
+                         IsVisible="{Binding HasPageTitles}"
+                         HorizontalOptions="FillAndExpand" 
+                         Margin="0,20" />
+                
+                <!-- Résumé du livre -->
+                <VerticalStackLayout IsVisible="{Binding HasPageTitles}" Spacing="10">
+                    <Label Text="À propos de ce livre"
+                           FontSize="16"
+                           FontAttributes="Bold" />
+                    <Label Text="{Binding Book.Summary}"
+                           FontSize="14"
+                           LineBreakMode="WordWrap" 
+                           TextColor="#444444"/>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Contrôles de navigation -->
+        <Grid Grid.Row="2" ColumnDefinitions="*,*" Margin="0,15,0,0">
+            <Button Grid.Column="0"
+                    Text="Page précédente"
+                    Command="{Binding PreviousPageCommand}"
+                    BackgroundColor="#9C82F0"
+                    TextColor="White"
+                    FontSize="14"
+                    Padding="5"
+                    Margin="0,0,5,0"
+                    IsEnabled="{Binding CanGoBack}" />
+
+            <Button Grid.Column="1"
+                    Text="Page suivante"
+                    Command="{Binding NextPageCommand}"
+                    BackgroundColor="#9C82F0"
+                    TextColor="White"
+                    FontSize="14"
+                    Padding="5"
+                    Margin="5,0,0,0"
+                    IsEnabled="{Binding CanGoForward}" />
+        </Grid>
+    </Grid>
 </ContentPage>
