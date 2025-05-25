@@ -64,15 +64,22 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="CommunityToolkit.Maui" Version="11.2.0" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.4" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite.Core" Version="9.0.4" />
 		<PackageReference Include="Microsoft.Extensions.Http" Version="9.0.4" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="9.0.60" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.4" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+		<PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.11" />
 	</ItemGroup>
 
 	<ItemGroup>
 	  <MauiXaml Update="Pages\Auth\LoginPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Pages\Content\ReadBookPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Pages\CreatePage.xaml">

@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:pages="clr-namespace:App.Pages"
+    xmlns:second_pages="clr-namespace:App.Pages.Content"
     x:Class="App.AppShell"
     BackgroundColor="#0B0B0D"
     Shell.TabBarBackgroundColor="#0B0B0D"
@@ -30,10 +31,11 @@
             Icon="create_icon.png"
             ContentTemplate="{DataTemplate pages:CreatePage}" Route="CreatePage" />
 
-        <!-- Profil -->
-        <ShellContent
-            Title="Profile"
+        <!-- Read -->
+        <ShellContent 
+            Title="Read"
             Icon="profile_icon.png"
-            ContentTemplate="{DataTemplate pages:ProfilePage}" Route="ProfilePage" />
+             ContentTemplate="{DataTemplate second_pages:ReadBookPage}"
+            Route="readbook" />
     </TabBar>
 </Shell>

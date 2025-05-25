@@ -1,5 +1,5 @@
-﻿
-using App.Pages;
+﻿using App.Pages;
+using App.Pages.Content;
 
 namespace App
 {
@@ -13,6 +13,7 @@ namespace App
             Routing.RegisterRoute("SearchPage", typeof(SearchPage));
             Routing.RegisterRoute("CreatePage", typeof(CreatePage));
             Routing.RegisterRoute("ProgilePage", typeof(ProfilePage));
+            Routing.RegisterRoute("ReadBookPage", typeof(ReadBookPage));
         }
     }
 }

@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text.Json;
 using System.Text.Json.Serialization;
-
+using Microsoft.Maui.Controls;
+using App.Helper;
 namespace App.Models
 {
     public enum RatingBook
@@ -25,28 +29,58 @@ namespace App.Models
 
     public class Book
     {
+        [JsonPropertyName("id")]
         public int Id { get; set; }
-        public string Name { get; set; }
-        public string Passage { get; set; }
-        public string Summary { get; set; }
-        public int EditionYear { get; set; }
-        public byte[] CoverImage { get; set; }
-        public string CoverImageBase64 {  get; set; }
-        public ImageSource ImageSource { get; set; }
 
+        [JsonPropertyName("name")]
+        public string Name { get; set; }    
+
+        [JsonPropertyName("passage")]
+        public string Passage { get; set; }
+
+        [JsonPropertyName("summary")]
+        public string Summary { get; set; }
+
+        [JsonPropertyName("editionYear")]
+        public int EditionYear { get; set; }
+
+        [JsonPropertyName("coverImage")]
+        public byte[] CoverImage { get; set; }
+
+        [JsonPropertyName("pages")]
         public int Pages { get; set; }
+
+        [JsonPropertyName("created")]
         public DateTime Created { get; set; }
+
+        [JsonPropertyName("category_fk")]
         public int CategoryFk { get; set; }
+
+        [JsonPropertyName("edition_fk")]
         public int EditorFk { get; set; }
+
+        [JsonPropertyName("author_fk")]
         public int AuthorFk { get; set; }
-        public int? UserFk { get; set; }
+
+
+        public int LastReadPage { get; set; } = 1;
+
+        public ICollection<Tag> Tags { get; set; }
+        
+        [JsonPropertyName("t_comments")]
+        public ICollection<Comment> Comments { get; set; }
+
+        public List<Chapter> Chapters { get; set; } = new();
+
     }
 
     public class ApiResponse
     {
+        [JsonPropertyName("message")]
         public string Message { get; set; }
 
         [JsonPropertyName("book")]
         public List<Book> Book { get; set; }
     }
+
 }

@@ -1,12 +1,116 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="App.Pages.CreatePage"
-             Title="CreatePage">
-    <VerticalStackLayout>
-        <Label 
-            Text="Welcome to .NET MAUI!"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
-    </VerticalStackLayout>
+<ContentPage 
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:ViewModel="clr-namespace:App.ViewModels"
+    xmlns:conv="clr-namespace:App.Helper"
+    x:Class="App.Pages.CreatePage"
+    BackgroundColor="#0B0B0D"
+    Title="Créer un livre">
+
+
+    <ContentPage.BindingContext>
+        <ViewModel:BookViewModel />
+    </ContentPage.BindingContext>
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <conv:ByteArrayToImageConverter x:Key="ByteArrayToImageConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+    <Grid RowDefinitions="Auto,*,Auto" ColumnDefinitions="*" >
+
+        <!-- ========== HEADER ========== -->
+        <VerticalStackLayout 
+            Grid.Row="0"
+            Padding="20,0,20,10" 
+            Spacing="16">
+
+            <Label Text="Passion Lecture"
+                   FontSize="26"
+                   FontAttributes="Bold"
+                   TextColor="White" />
+        </VerticalStackLayout>
+
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout 
+                Padding="20,0"
+                Spacing="20">
+
+                <Label Text="Ajouter un livre"
+                       TextColor="White"
+                       FontAttributes="Bold"
+                       FontSize="20"
+                       HorizontalOptions="Center" />
+
+                <!-- Titre -->
+                <Entry Placeholder="Titre du livre"
+                       Text="{Binding Name}"
+                       BackgroundColor="#231F2E"
+                       PlaceholderColor="#888"
+                       TextColor="White"
+                       HeightRequest="50"
+                       />
+
+                <!-- Description -->
+                <Editor Placeholder="Résumé"
+                        Text="{Binding Summary}"
+                        BackgroundColor="#231F2E"
+                        PlaceholderColor="#888"
+                        TextColor="White"
+                        AutoSize="TextChanges"
+                        HeightRequest="120"
+                        />
+
+                <!-- Extrait/Passage -->
+                <Editor Placeholder="Extrait ou passage"
+                        Text="{Binding Passage}"
+                        BackgroundColor="#231F2E"
+                        PlaceholderColor="#888"
+                        TextColor="White"
+                        AutoSize="TextChanges"
+                        HeightRequest="120"
+                        />
+
+                <!-- Année -->
+                <Entry Placeholder="Année d'édition"
+                       Text="{Binding EditionYear}"
+                       Keyboard="Numeric"
+                       BackgroundColor="#231F2E"
+                       PlaceholderColor="#888"
+                       TextColor="White"
+                       HeightRequest="50"
+                       />
+
+                <!-- Couverture -->
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Image de couverture" TextColor="White" />
+
+                    <Frame 
+                        HeightRequest="150"
+                        CornerRadius="10"
+                        Padding="0"
+                        BackgroundColor="#231F2E">
+                        <Image Source="{Binding CoverImage, Converter={StaticResource ByteArrayToImageConverter}}"
+                               Aspect="AspectFill"/>
+                    </Frame>
+
+                    <Button Text="Choisir une image"
+                            Command="{Binding PickImageCommand}"
+                            BackgroundColor="#9C82F0"
+                            TextColor="White"
+                            CornerRadius="10"
+                            HeightRequest="50"/>
+                </VerticalStackLayout>
+
+                <!-- Publier -->
+                <Button Text="Publier"
+                        Command="{Binding AddBookCommand}"
+                        BackgroundColor="#9C82F0"
+                        TextColor="White"
+                        CornerRadius="10"
+                        HeightRequest="50"/>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
 </ContentPage>
