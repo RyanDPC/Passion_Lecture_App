@@ -14,7 +14,7 @@ namespace App.Models
         public string Email { get; set; }
         public string Password { get; set; }
         public string Username { get; set; }
-        public Blob Pdp { get; set; }
+        public byte[] Pdp { get; set; }
         public ICollection<Book> Books { get; set; }
     }
 }

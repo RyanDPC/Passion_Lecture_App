@@ -36,6 +36,6 @@
             Title="Read"
             Icon="profile_icon.png"
              ContentTemplate="{DataTemplate second_pages:ReadBookPage}"
-            Route="ReadBookPage" />
+            Route="readbook" />
     </TabBar>
 </Shell>

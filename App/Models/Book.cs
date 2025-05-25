@@ -47,6 +47,7 @@ namespace App.Models
         [JsonPropertyName("coverImage")]
         public byte[] CoverImage { get; set; }
 
+        [JsonPropertyName("pages")]
         public int Pages { get; set; }
 
         [JsonPropertyName("created")]
@@ -61,15 +62,16 @@ namespace App.Models
         [JsonPropertyName("author_fk")]
         public int AuthorFk { get; set; }
 
-        [JsonPropertyName("user_fk")]
-        public int? UserFk { get; set; }
-        public User User { get; set; }
+
         public int LastReadPage { get; set; } = 1;
 
         public ICollection<Tag> Tags { get; set; }
         
         [JsonPropertyName("t_comments")]
         public ICollection<Comment> Comments { get; set; }
+
+        public List<Chapter> Chapters { get; set; } = new();
+
     }
 
     public class ApiResponse

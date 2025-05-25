@@ -75,53 +75,58 @@
             <CollectionView.ItemTemplate>
                 <DataTemplate>
                     <Grid Padding="0" Margin="0,10">
-                        <Frame BackgroundColor="#1C1C24"
-                               CornerRadius="10"
-                               Padding="10"
-                               HeightRequest="400"
-                               WidthRequest="180">
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer 
+                Command="{Binding Source={RelativeSource AncestorType={x:Type ViewModel:BookViewModel}}, Path=GoToReadBookCommand}"
+                CommandParameter="{Binding Id}" />
+                        </Grid.GestureRecognizers>
+
+                        <Grid BackgroundColor="#1C1C24"
+              Padding="10"
+              HeightRequest="400"
+              WidthRequest="180"
+              >
                             <VerticalStackLayout>
                                 <!-- Image de couverture -->
-                                <ImageButton
-                                 Source="{Binding CoverImage, Converter={StaticResource ByteArrayToImageConverter}}"
-                                 HeightRequest="250"
-                                 Aspect="AspectFill"
-                                 Command="{Binding GoToReadBookCommand}" />
+                                <Image
+                    Source="{Binding CoverImage, Converter={StaticResource ByteArrayToImageConverter}}"
+                    HeightRequest="250"
+                    Aspect="AspectFill" />
 
                                 <!-- Titre du livre -->
                                 <Label Text="{Binding Name}"
-                                       FontSize="16"
-                                       FontAttributes="Bold"
-                                       HorizontalTextAlignment="Center"
-                                       TextColor="white"
-                                       Margin="0,10,0,5"/>
-                                       
+                       FontSize="16"
+                       FontAttributes="Bold"
+                       HorizontalTextAlignment="Center"
+                       TextColor="white"
+                       Margin="0,10,0,5"/>
+
                                 <!-- Bouton Ajouter un tag -->
                                 <Button Text="Ajouter un tag"
-                                        FontSize="12"
-                                        BackgroundColor="#9C82F0"
-                                        CornerRadius="15"
-                                        HeightRequest="30"
-                                        Margin="0,5"
-                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ViewModel:BookViewModel}}, Path=AddTagToBookCommand}"
-                                        CommandParameter="{Binding}" />
+                        FontSize="12"
+                        BackgroundColor="#9C82F0"
+                        CornerRadius="15"
+                        HeightRequest="30"
+                        Margin="0,5"
+                        Command="{Binding Source={RelativeSource AncestorType={x:Type ViewModel:BookViewModel}}, Path=AddTagToBookCommand}"
+                        CommandParameter="{Binding Tags}" />
 
                                 <!-- Tags -->
                                 <HorizontalStackLayout Spacing="5" Margin="0,5">
                                     <CollectionView ItemsSource="{Binding Tags}"
-                                                  HorizontalScrollBarVisibility="Never"
-                                                  HeightRequest="35">
+                                    HorizontalScrollBarVisibility="Never"
+                                    HeightRequest="35">
                                         <CollectionView.ItemsLayout>
                                             <LinearItemsLayout Orientation="Horizontal" ItemSpacing="5"/>
                                         </CollectionView.ItemsLayout>
                                         <CollectionView.ItemTemplate>
                                             <DataTemplate>
                                                 <Frame BackgroundColor="#9C82F0"
-                                                       CornerRadius="15"
-                                                       Padding="8,4">
+                                       CornerRadius="15"
+                                       Padding="8,4">
                                                     <Label Text="{Binding Name}"
-                                                           TextColor="White"
-                                                           FontSize="12"/>
+                                           TextColor="White"
+                                           FontSize="12"/>
                                                 </Frame>
                                             </DataTemplate>
                                         </CollectionView.ItemTemplate>
@@ -133,9 +138,10 @@
                                     <Image Source="{Binding RatingBook}" HeightRequest="20" />
                                 </HorizontalStackLayout>
                             </VerticalStackLayout>
-                        </Frame>
+                        </Grid>
                     </Grid>
                 </DataTemplate>
+
             </CollectionView.ItemTemplate>
         </CollectionView>
 

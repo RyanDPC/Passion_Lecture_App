@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
+using Microsoft.Maui.Controls;
 
 namespace App.ViewModels
 {
@@ -15,133 +16,147 @@ namespace App.ViewModels
         private readonly BookApi _bookApi = new();
 
         [ObservableProperty]
-        private Book book;
+        private Book currentBook;
+
+        [ObservableProperty]
+        private ObservableCollection<Book> bookList = new();
 
         [ObservableProperty]
         private int currentPage;
-        
+
         [ObservableProperty]
         private bool canGoBack;
-        
+
         [ObservableProperty]
         private bool canGoForward;
-        
+
         [ObservableProperty]
         private ObservableCollection<Tag> bookTags = new();
-        
-        
+
         [ObservableProperty]
         private string bookCategory;
-        
+
         [ObservableProperty]
         private double averageRating;
 
-        // Utilisé pour l'affichage du texte de pagination
-        public string CurrentPageText => $"Page {CurrentPage} sur {Book?.Pages ?? 1}";
+        [ObservableProperty]
+        private ObservableCollection<Chapter> chapters = new();
 
-        // Progression de lecture en pourcentage
-        public double ReadingProgress => Book != null && Book.Pages > 0 ? (double)CurrentPage / Book.Pages : 0;
+        [ObservableProperty]
+        private Chapter currentChapter;
 
-        // Contenu de la page courante (dans un vrai livre, ce serait du texte spécifique à la page)
-        public string CurrentPageContent => Book?.Passage ?? "Contenu non disponible";
+        [ObservableProperty]
+        private int currentChapterIndex;
 
-        // Titre de la page courante (simulé)
+        public string CurrentChapterTitle => CurrentChapter?.Title ?? "Aucun chapitre";
+
+        public HtmlWebViewSource CurrentChapterHtmlSource => new()
+        {
+            Html = CurrentChapter?.HtmlContent ?? "<p>Pas de contenu</p>"
+        };
+
+        public double ReadingProgress => CurrentBook != null && CurrentBook.Pages > 0
+            ? (double)CurrentPage / CurrentBook.Pages
+            : 0;
+
+        public string CurrentPageContent => CurrentBook?.Passage ?? "Contenu non disponible";
+
         public string CurrentPageTitle => $"Chapitre {(CurrentPage / 10) + 1}";
-        
-        // Indique si le livre a des titres de chapitres
-        public bool HasPageTitles => CurrentPage % 10 == 1; // Simuler un titre toutes les 10 pages
 
-        // Constructeur avec un paramètre bookId
+        public bool HasPageTitles => CurrentPage % 10 == 1;
+
+        public bool HasNextChapter => Chapters != null && CurrentChapterIndex < Chapters.Count - 1;
+
+        public string CurrentPageText => $"Page {CurrentPage} sur {CurrentBook?.Pages ?? 1}";
+
         public ReadBookViewModel(int bookId)
         {
             _bookId = bookId;
-            LoadBookAsync(bookId).Wait();
         }
 
-        // Charger le livre et la page en cours
         public async Task LoadBookAsync(int bookId)
         {
-            // Essayer d'abord de charger depuis l'API (pour avoir toutes les données fraîches)
+            _bookId = bookId;
             try
             {
                 var books = await _bookApi.GetBookByIdAsync(bookId);
                 if (books.Count > 0)
                 {
-                    Book = books[0];
-                    
-                    // Charger les tags, commentaires et autres données associées
-                    if (Book.Tags != null)
+                    CurrentBook = books[0];
+
+                    if (CurrentBook.Chapters != null && CurrentBook.Chapters.Count > 0)
                     {
-                        BookTags = new ObservableCollection<Tag>(Book.Tags);
+                        Chapters = new ObservableCollection<Chapter>(CurrentBook.Chapters);
+                        CurrentChapterIndex = 0;
+                        CurrentChapter = Chapters[CurrentChapterIndex];
                     }
-                    
-                    // Une fois les données récupérées, sauvegarder dans la base de données locale pour accès hors ligne
+
+                    if (CurrentBook.Tags != null)
+                    {
+                        BookTags = new ObservableCollection<Tag>(CurrentBook.Tags);
+                    }
+
                     await SaveBookToLocalDbAsync();
-                    
-                    // Si on a un livre, charger la dernière page lue depuis la base de données locale
                     await LoadLastPageFromLocalDbAsync();
                 }
                 else
                 {
-                    // Si le livre n'est pas disponible via l'API, essayer depuis la base de données locale
                     await LoadBookFromLocalDbAsync();
                 }
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
-                Console.WriteLine($"Erreur lors du chargement du livre depuis l'API: {ex.Message}");
-                // En cas d'erreur, charger depuis la base de données locale
+                Console.WriteLine("Erreur lors du chargement du livre depuis l'API: " + ex.Message);
+
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine("Détail de l'erreur interne : " + ex.InnerException.Message);
+                }
+
                 await LoadBookFromLocalDbAsync();
             }
-            
-            // Mettre à jour l'état de navigation
+
             UpdateNavigationState();
         }
-        
+
         private async Task LoadBookFromLocalDbAsync()
         {
             await using var context = new DataContext();
-            Book = await context.Books.FirstOrDefaultAsync(b => b.Id == _bookId);
-            
-            // Si on a un livre, charger la dernière page lue
-            if (Book != null)
+            CurrentBook = await context.Books.FirstOrDefaultAsync(b => b.Id == _bookId);
+            if (CurrentBook != null)
             {
-                CurrentPage = Book.LastReadPage > 0 ? Book.LastReadPage : 1;
+                CurrentPage = CurrentBook.LastReadPage > 0 ? CurrentBook.LastReadPage : 1;
             }
         }
-        
+
         private async Task SaveBookToLocalDbAsync()
         {
-            if (Book == null) return;
-            
+            if (CurrentBook == null) return;
+
             await using var context = new DataContext();
-            var localBook = await context.Books.FirstOrDefaultAsync(b => b.Id == Book.Id);
-            
+            var localBook = await context.Books.FirstOrDefaultAsync(b => b.Id == CurrentBook.Id);
+
             if (localBook == null)
             {
-                // Si le livre n'existe pas localement, l'ajouter
-                context.Books.Add(Book);
+                context.Books.Add(CurrentBook);
             }
             else
             {
-                // Sinon mettre à jour les données du livre local
-                localBook.Name = Book.Name;
-                localBook.Passage = Book.Passage;
-                localBook.Summary = Book.Summary;
-                localBook.EditionYear = Book.EditionYear;
-                localBook.CoverImage = Book.CoverImage;
-                localBook.Pages = Book.Pages;
-                // Ne pas écraser LastReadPage car on veut conserver la progression locale
+                localBook.Name = CurrentBook.Name;
+                localBook.Passage = CurrentBook.Passage;
+                localBook.Summary = CurrentBook.Summary;
+                localBook.EditionYear = CurrentBook.EditionYear;
+                localBook.CoverImage = CurrentBook.CoverImage;
+                localBook.Pages = CurrentBook.Pages;
             }
-            
+
             await context.SaveChangesAsync();
         }
-        
+
         private async Task LoadLastPageFromLocalDbAsync()
         {
             await using var context = new DataContext();
             var localBook = await context.Books.FirstOrDefaultAsync(b => b.Id == _bookId);
-            
             if (localBook != null && localBook.LastReadPage > 0)
             {
                 CurrentPage = localBook.LastReadPage;
@@ -152,31 +167,24 @@ namespace App.ViewModels
             }
         }
 
-        // Mettre à jour l'état des boutons de navigation
         private void UpdateNavigationState()
         {
             CanGoBack = CurrentPage > 1;
-            CanGoForward = Book != null && CurrentPage < Book.Pages;
+            CanGoForward = CurrentBook != null && CurrentPage < CurrentBook.Pages;
         }
 
-        // Passer à la page suivante
         [RelayCommand]
         public async Task NextPage()
         {
-            if (Book != null && CurrentPage < Book.Pages)
+            if (CurrentBook != null && CurrentPage < CurrentBook.Pages)
             {
                 CurrentPage++;
                 UpdateNavigationState();
                 await SaveProgressAsync();
-                OnPropertyChanged(nameof(CurrentPageText));
-                OnPropertyChanged(nameof(ReadingProgress));
-                OnPropertyChanged(nameof(CurrentPageContent));
-                OnPropertyChanged(nameof(CurrentPageTitle));
-                OnPropertyChanged(nameof(HasPageTitles));
+                RefreshPageBindings();
             }
         }
 
-        // Revenir à la page précédente
         [RelayCommand]
         public async Task PreviousPage()
         {
@@ -185,58 +193,67 @@ namespace App.ViewModels
                 CurrentPage--;
                 UpdateNavigationState();
                 await SaveProgressAsync();
-                OnPropertyChanged(nameof(CurrentPageText));
-                OnPropertyChanged(nameof(ReadingProgress));
-                OnPropertyChanged(nameof(CurrentPageContent));
-                OnPropertyChanged(nameof(CurrentPageTitle));
-                OnPropertyChanged(nameof(HasPageTitles));
+                RefreshPageBindings();
             }
         }
 
-        // Sauvegarder la progression à la fois localement et sur le serveur
+        private void RefreshPageBindings()
+        {
+            OnPropertyChanged(nameof(CurrentPageText));
+            OnPropertyChanged(nameof(ReadingProgress));
+            OnPropertyChanged(nameof(CurrentPageContent));
+            OnPropertyChanged(nameof(CurrentPageTitle));
+            OnPropertyChanged(nameof(HasPageTitles));
+        }
+
         private async Task SaveProgressAsync()
         {
-            if (Book == null) return;
-            
-            // Mise à jour locale
+            if (CurrentBook == null) return;
+
             await using var context = new DataContext();
             var bookToUpdate = await context.Books.FirstOrDefaultAsync(b => b.Id == _bookId);
             if (bookToUpdate != null)
             {
                 bookToUpdate.LastReadPage = CurrentPage;
-                await context.SaveChangesAsync();
             }
             else
             {
-                // Si le livre n'existe pas dans la base de données locale, l'ajouter
                 context.Books.Add(new Book
                 {
                     Id = _bookId,
-                    Name = Book.Name,
+                    Name = CurrentBook.Name,
                     LastReadPage = CurrentPage,
-                    Pages = Book.Pages,
-                    CoverImage = Book.CoverImage
+                    Pages = CurrentBook.Pages,
+                    CoverImage = CurrentBook.CoverImage
                 });
-                await context.SaveChangesAsync();
             }
-            
-            // On pourrait aussi synchroniser avec le serveur
-            try
+
+            await context.SaveChangesAsync();
+
+            // Synchronisation serveur possible ici
+        }
+
+        [RelayCommand]
+        public void NextChapter()
+        {
+            if (Chapters != null && CurrentChapterIndex < Chapters.Count - 1)
             {
-                // Créer un objet avec juste la dernière page lue
-                var bookProgress = new
-                {
-                    id = _bookId,
-                    lastReadPage = CurrentPage
-                };
-                
-                // On pourrait envoyer cela au serveur si besoin
-                // await _bookApi.UpdateBookProgressAsync(bookProgress);
+                CurrentChapterIndex++;
+                CurrentChapter = Chapters[CurrentChapterIndex];
+                OnPropertyChanged(nameof(CurrentChapterTitle));
+                OnPropertyChanged(nameof(CurrentChapterHtmlSource));
             }
-            catch (System.Exception ex)
+        }
+
+        [RelayCommand]
+        public void PreviousChapter()
+        {
+            if (Chapters != null && CurrentChapterIndex > 0)
             {
-                System.Console.WriteLine($"Erreur lors de la mise à jour de la progression sur le serveur : {ex.Message}");
-                // La mise à jour locale a fonctionné, donc on peut continuer
+                CurrentChapterIndex--;
+                CurrentChapter = Chapters[CurrentChapterIndex];
+                OnPropertyChanged(nameof(CurrentChapterTitle));
+                OnPropertyChanged(nameof(CurrentChapterHtmlSource));
             }
         }
     }

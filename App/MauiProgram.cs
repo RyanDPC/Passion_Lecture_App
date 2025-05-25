@@ -4,6 +4,7 @@ using App.Services;
 using Microsoft.Extensions.Logging;
 using App.Interface;
 using CommunityToolkit.Maui;
+using SQLitePCL;
 namespace App;
 
 public static class MauiProgram
@@ -22,8 +23,9 @@ public static class MauiProgram
         builder.Services.AddSingleton<BookViewModel>();
         builder.Services.AddSingleton<HttpClient>();
         builder.Services.AddSingleton<BookApi>();
+        Batteries_V2.Init();
 #if DEBUG
-		builder.Logging.AddDebug();
+        builder.Logging.AddDebug();
 #endif
 
 		return builder.Build();

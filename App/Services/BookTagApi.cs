@@ -3,7 +3,7 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-
+using App.Database;
 namespace App.Services
 {
     public class BookTagApi
@@ -82,7 +82,7 @@ namespace App.Services
                 }
                 
                 // Plan B: Utiliser les données locales
-                using (var context = new App.Database.DataContext())
+                using (var context = new DataContext())
                 {
                     var tag = await context.Tags.FindAsync(tagId);
                     if (tag != null)

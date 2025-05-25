@@ -38,6 +38,47 @@ namespace App.ViewModels
         {
             LoadBooksAsync();
             LoadTagsAsync();
+            AddMockBookWithChapters(); // Ajout du mock pour test
+        }
+
+        private void AddMockBookWithChapters()
+        {
+            var mockBook = new Book
+            {
+                Id = 999,
+                Name = "Livre de Test (Mock)",
+                Summary = "Résumé du livre de test.",
+                Passage = "Contenu principal du livre de test.",
+                EditionYear = 2024,
+                Pages = 20,
+                Chapters = new List<Chapter>
+                {
+                    new Chapter
+                    {
+                        Id = 1,
+                        Title = "Chapitre 1 : Introduction",
+                        HtmlContent = "<h1>Chapitre 1</h1><p>Contenu du chapitre 1...</p>",
+                        BookId = 999
+                    },
+                    new Chapter
+                    {
+                        Id = 2,
+                        Title = "Chapitre 2 : Développement",
+                        HtmlContent = "<h1>Chapitre 2</h1><p>Contenu du chapitre 2...</p>",
+                        BookId = 999
+                    },
+                    new Chapter
+                    {
+                        Id = 3,
+                        Title = "Chapitre 3 : Conclusion",
+                        HtmlContent = "<h1>Chapitre 3</h1><p>Contenu du chapitre 3...</p>",
+                        BookId = 999
+                    }
+                }
+            };
+
+            Books.Add(mockBook);
+            UpdateFilteredBooks();
         }
 
         private async Task LoadTagsAsync()
@@ -222,14 +263,15 @@ namespace App.ViewModels
         {
             try
             {
-                // Naviguer vers la page de lecture du livre avec l'ID du livre dans l'URL
-                await Shell.Current.GoToAsync($"ReadBookPage?bookId={bookId}");
+                Console.WriteLine($"[DEBUG] Navigation demandée pour le livre ID : {bookId}");
+                await Shell.Current.GoToAsync($"///readbook?bookId={bookId}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Erreur lors de la navigation vers le livre : {ex.Message}");
+                Console.WriteLine($"[ERROR] Échec navigation vers ReadBookPage : {ex.Message}");
             }
         }
+
 
         [RelayCommand]
         private async Task AddTagToBookAsync(Book book)

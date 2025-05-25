@@ -29,8 +29,6 @@ namespace App.Models
         
         [JsonPropertyName("updatedAt")]
         public DateTime UpdatedAt { get; set; }
-        
-        // Navigation properties
         public Book Book { get; set; }
         public User User { get; set; }
     }
