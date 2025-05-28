@@ -1,5 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+﻿<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:ViewModel="clr-namespace:App.ViewModels"
              xmlns:conv="clr-namespace:App.Helper"
@@ -39,6 +38,22 @@
         <!-- TAGS FILTER -->
         <ScrollView Grid.Row="1" Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
             <HorizontalStackLayout Spacing="10" Padding="20,0">
+                <!-- Sélecteur de tags avec CheckBox -->
+                <CollectionView ItemsSource="{Binding AvailableTags}"
+                               SelectionMode="None"
+                               ItemsLayout="HorizontalList"
+                               HeightRequest="50">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <StackLayout Orientation="Horizontal" Spacing="5" Padding="0,0,10,0" VerticalOptions="Center">
+                                <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" 
+                                          CheckedChanged="TagCheckBox_CheckedChanged"/>
+                                <Label Text="{Binding Name}" TextColor="White" VerticalOptions="Center"/>
+                            </StackLayout>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+                <!-- CollectionView existant pour les tags (boutons visuels) -->
                 <CollectionView ItemsSource="{Binding AvailableTags}"
                                HorizontalScrollBarVisibility="Never"
                                SelectionMode="Single"
@@ -102,14 +117,9 @@
                        Margin="0,10,0,5"/>
 
                                 <!-- Bouton Ajouter un tag -->
-                                <Button Text="Ajouter un tag"
-                        FontSize="12"
-                        BackgroundColor="#9C82F0"
-                        CornerRadius="15"
-                        HeightRequest="30"
-                        Margin="0,5"
-                        Command="{Binding Source={RelativeSource AncestorType={x:Type ViewModel:BookViewModel}}, Path=AddTagToBookCommand}"
-                        CommandParameter="{Binding Tags}" />
+                                <Button Command="{Binding AddTagToBookCommand}" 
+                                        CommandParameter="{Binding SelectedBook}"
+                                        Text="Add Tag" />
 
                                 <!-- Tags -->
                                 <HorizontalStackLayout Spacing="5" Margin="0,5">
@@ -121,13 +131,12 @@
                                         </CollectionView.ItemsLayout>
                                         <CollectionView.ItemTemplate>
                                             <DataTemplate>
-                                                <Frame BackgroundColor="#9C82F0"
-                                       CornerRadius="15"
+                                                <Grid BackgroundColor="#9C82F0"
                                        Padding="8,4">
                                                     <Label Text="{Binding Name}"
                                            TextColor="White"
                                            FontSize="12"/>
-                                                </Frame>
+                                                </Grid>
                                             </DataTemplate>
                                         </CollectionView.ItemTemplate>
                                     </CollectionView>

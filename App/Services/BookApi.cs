@@ -1,8 +1,9 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Collections.Generic;
+using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using App.Models;
-using System.Collections.Generic;
 
 namespace App.Services
 {
@@ -12,27 +13,146 @@ namespace App.Services
         {
             BaseAddress = new Uri("http://10.0.2.2:443/")
         };
-        private readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        };
 
-        // Récupérer les livres par nom
+        // Méthode pour lire un byte[] depuis une chaîne base64 ou un tableau JSON
+        private static byte[] ReadByteArray(JsonElement element)
+        {
+            if (element.ValueKind == JsonValueKind.Null || element.ValueKind == JsonValueKind.Undefined)
+            {
+                System.Diagnostics.Debug.WriteLine("[DOTNET] Content is null or undefined, skipping conversion.");
+                return Array.Empty<byte>();
+            }
+
+            System.Diagnostics.Debug.WriteLine($"[DOTNET] Type de l'élément Content: {element.ValueKind}");
+            
+            try
+            {
+                if (element.ValueKind == JsonValueKind.Object)
+                {
+                    // Pour le format {type: "Buffer", data: [...]}
+                    if (element.TryGetProperty("type", out var typeElem) && 
+                        element.TryGetProperty("data", out var dataElem))
+                    {
+                        System.Diagnostics.Debug.WriteLine("[DOTNET] Format Buffer trouvé");
+                        var bytes = dataElem.EnumerateArray()
+                            .Select(x => (byte)x.GetInt32())
+                            .ToArray();
+                        System.Diagnostics.Debug.WriteLine($"[DOTNET] Bytes lus: {bytes.Length}");
+                        return bytes;
+                    }
+                }
+                else if (element.ValueKind == JsonValueKind.Array)
+                {
+                    System.Diagnostics.Debug.WriteLine("[DOTNET] Format tableau trouvé");
+                    var bytes = element.EnumerateArray()
+                        .Select(x => (byte)x.GetInt32())
+                        .ToArray();
+                    System.Diagnostics.Debug.WriteLine($"[DOTNET] Bytes lus: {bytes.Length}");
+                    return bytes;
+                }
+                
+                System.Diagnostics.Debug.WriteLine($"[DOTNET] Format non reconnu: {element}");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[DOTNET] Erreur dans ReadByteArray: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[DOTNET] Element problématique: {element}");
+            }
+
+            return Array.Empty<byte>();
+        }
+
+        // Méthode générique pour désérialiser une liste de livres
+        private List<Book> ParseBooks(string json)
+        {
+            var books = new List<Book>();
+            try 
+            {
+                using JsonDocument doc = JsonDocument.Parse(json);
+                if (!doc.RootElement.TryGetProperty("book", out JsonElement booksElement))
+                {
+                    System.Diagnostics.Debug.WriteLine("[DOTNET] Propriété 'book' non trouvée");
+                    return books;
+                }
+
+                foreach (var el in booksElement.EnumerateArray())
+                {
+                    try
+                    {
+                        if (el.TryGetProperty("content", out var contentElement))
+                        {
+                            System.Diagnostics.Debug.WriteLine("[DOTNET] Structure du content:");
+                            System.Diagnostics.Debug.WriteLine(contentElement.ToString());
+                        }
+                        
+                        var book = new Book
+                        {
+                            Id = el.GetProperty("id").GetInt32(),
+                            Name = el.GetProperty("name").GetString(),
+                            Passage = el.TryGetProperty("passage", out var passage) ? passage.GetString() : null,
+                            Summary = el.GetProperty("summary").GetString(),
+                            EditionYear = el.GetProperty("editionYear").GetInt32(),
+                            Pages = el.TryGetProperty("pages", out var pages) ? pages.GetInt32() : 0,
+                            Created = el.TryGetProperty("created", out var created) ? created.GetDateTime() : DateTime.UtcNow,
+                            CategoryFk = el.TryGetProperty("category_fk", out var catFk) ? catFk.GetInt32() : 0,
+                            EditorFk = el.TryGetProperty("edition_fk", out var editorFk) ? editorFk.GetInt32() : 0,
+                            AuthorFk = el.TryGetProperty("author_fk", out var authorFk) ? authorFk.GetInt32() : 0
+                        };
+
+                        if (el.TryGetProperty("content", out var contentsElement) && 
+                            contentsElement.ValueKind != JsonValueKind.Null && 
+                            contentsElement.ValueKind != JsonValueKind.Undefined)
+                        {
+                            System.Diagnostics.Debug.WriteLine("[DOTNET] Content trouvé, tentative de conversion...");
+                            book.Content = ReadByteArray(contentsElement);
+                            System.Diagnostics.Debug.WriteLine($"[DOTNET] Taille du content : {book.Content?.Length ?? 0} bytes");
+                        }
+                        else
+                        {
+                            System.Diagnostics.Debug.WriteLine("[DOTNET] Pas de champ 'content' ou content est null !");
+                        }
+
+                        books.Add(book);
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[DOTNET] Erreur lors du parsing d'un livre : {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"[DOTNET] StackTrace: {ex.StackTrace}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[DOTNET] Erreur globale de parsing : {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[DOTNET] StackTrace: {ex.StackTrace}");
+            }
+            return books;
+        }
+
+        public async Task<List<Book>> GetAllBooksAsync()
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync("api/book");
+                var data = await response.Content.ReadAsStringAsync();
+                var books = ParseBooks(data);
+                Console.WriteLine($"[DOTNET] Total des livres chargés : {books.Count}");
+                return books;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[DOTNET] Erreur lors du chargement des livres : {ex.Message}");
+                return new List<Book>();
+            }
+        }
+
         public async Task<List<Book>> GetBooksByNameAsync(string name)
         {
             try
             {
                 var response = await _httpClient.GetAsync($"api/book?name={name}");
                 var data = await response.Content.ReadAsStringAsync();
-
-                if (string.IsNullOrEmpty(data))
-                {
-                    return new List<Book>();
-                }
-
-                var apiResponse = JsonSerializer.Deserialize<ApiResponse>(data, _jsonOptions);
-
-                return apiResponse?.Book ?? new List<Book>();
+                return ParseBooks(data);
             }
             catch (Exception ex)
             {
@@ -40,42 +160,69 @@ namespace App.Services
                 return new List<Book>();
             }
         }
-        public async Task<List<Book>> GetBookByIdAsync(int id)
+
+        public async Task<Book> GetBookByIdAsync(int id)
         {
             try
             {
-                var response = await _httpClient.GetAsync($"api/book?id={id}");
+                var response = await _httpClient.GetAsync($"api/book/{id}");
                 var data = await response.Content.ReadAsStringAsync();
-                if (string.IsNullOrEmpty(data))
+
+                // Désérialise directement le livre (pas la liste)
+                using JsonDocument doc = JsonDocument.Parse(data);
+                var root = doc.RootElement;
+
+                // Si la racine est un objet livre unique
+                if (root.ValueKind == JsonValueKind.Object && root.TryGetProperty("id", out _))
                 {
-                    return new List<Book>();
+                    var book = new Book
+                    {
+                        Id = root.GetProperty("id").GetInt32(),
+                        Name = root.GetProperty("name").GetString(),
+                        Passage = root.TryGetProperty("passage", out var passage) ? passage.GetString() : null,
+                        Summary = root.GetProperty("summary").GetString(),
+                        EditionYear = root.GetProperty("editionYear").GetInt32(),
+                        Pages = root.TryGetProperty("pages", out var pages) ? pages.GetInt32() : 0,
+                        Created = root.TryGetProperty("created", out var created) ? created.GetDateTime() : DateTime.UtcNow,
+                        CategoryFk = root.TryGetProperty("category_fk", out var catFk) ? catFk.GetInt32() : 0,
+                        EditorFk = root.TryGetProperty("edition_fk", out var editorFk) ? editorFk.GetInt32() : 0,
+                        AuthorFk = root.TryGetProperty("author_fk", out var authorFk) ? authorFk.GetInt32() : 0
+                    };
+
+                    if (root.TryGetProperty("content", out var contentsElement))
+                    {
+                        System.Diagnostics.Debug.WriteLine("[DOTNET] Content trouvé, tentative de conversion (livre unique)...");
+                        book.Content = ReadByteArray(contentsElement);
+                        System.Diagnostics.Debug.WriteLine($"[DOTNET] Taille du content : {book.Content?.Length ?? 0} bytes");
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine("[DOTNET] Pas de champ 'content' dans la réponse !");
+                    }
+
+                    return book;
                 }
-                var apiResponse = JsonSerializer.Deserialize<ApiResponse>(data, _jsonOptions);
-                return apiResponse?.Book ?? new List<Book>();
+                else
+                {
+                    // fallback: ancienne logique (liste)
+                    var books = ParseBooks(data);
+                    return books.FirstOrDefault();
+                }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Erreur lors de la récupération du livre par ID : {ex.Message}");
-                return new List<Book>();
+                return null;
             }
         }
 
-        // Récupérer les livres par date d'ajout
         public async Task<List<Book>> GetBooksByDateAddedAsync()
         {
             try
             {
                 var response = await _httpClient.GetAsync("api/book?sortByDate=true");
                 var data = await response.Content.ReadAsStringAsync();
-
-                if (string.IsNullOrEmpty(data))
-                {
-                    return new List<Book>();
-                }
-
-                var apiResponse = JsonSerializer.Deserialize<ApiResponse>(data, _jsonOptions);
-
-                return apiResponse?.Book ?? new List<Book>();
+                return ParseBooks(data);
             }
             catch (Exception ex)
             {
@@ -84,21 +231,13 @@ namespace App.Services
             }
         }
 
-        // Récupérer les livres créés par un utilisateur spécifique (avec UserFk)
         public async Task<List<Book>> GetBooksByUserIdAsync(int userId)
         {
             try
             {
                 var response = await _httpClient.GetAsync($"api/book?userId={userId}");
                 var data = await response.Content.ReadAsStringAsync();
-
-                if (string.IsNullOrEmpty(data))
-                {
-                    return new List<Book>();
-                }
-
-                var apiResponse = JsonSerializer.Deserialize<ApiResponse>(data, _jsonOptions);
-                return apiResponse?.Book ?? new List<Book>();
+                return ParseBooks(data);
             }
             catch (Exception ex)
             {
@@ -107,33 +246,12 @@ namespace App.Services
             }
         }
 
-        // Récupérer tous les livres
-        public async Task<List<Book>> GetAllBooksAsync()
-        {
-            try
-            {
-                var response = await _httpClient.GetAsync("api/book");
-                response.EnsureSuccessStatusCode();
-
-                // Utiliser ReadAsStringAsync au lieu de ReadAsStreamAsync car il fonctionne mieux avec notre convertisseur personnalisé
-                var data = await response.Content.ReadAsStringAsync();
-                var apiResponse = JsonSerializer.Deserialize<ApiResponse>(data, _jsonOptions);
-
-                return apiResponse?.Book ?? new List<Book>();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Erreur lors du chargement des livres: {ex.Message}");
-                return new List<Book>();
-            }
-        }
-
-        // Méthode pour créer un livre
         public async Task CreateBookAsync(Book book)
         {
             try
             {
-                var content = new StringContent(JsonSerializer.Serialize(book), System.Text.Encoding.UTF8, "application/json");
+                var json = JsonSerializer.Serialize(book);
+                var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
                 await _httpClient.PostAsync("api/book", content);
             }
             catch (Exception ex)

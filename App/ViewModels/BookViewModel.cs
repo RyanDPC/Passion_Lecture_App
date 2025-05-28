@@ -38,47 +38,6 @@ namespace App.ViewModels
         {
             LoadBooksAsync();
             LoadTagsAsync();
-            AddMockBookWithChapters(); // Ajout du mock pour test
-        }
-
-        private void AddMockBookWithChapters()
-        {
-            var mockBook = new Book
-            {
-                Id = 999,
-                Name = "Livre de Test (Mock)",
-                Summary = "Résumé du livre de test.",
-                Passage = "Contenu principal du livre de test.",
-                EditionYear = 2024,
-                Pages = 20,
-                Chapters = new List<Chapter>
-                {
-                    new Chapter
-                    {
-                        Id = 1,
-                        Title = "Chapitre 1 : Introduction",
-                        HtmlContent = "<h1>Chapitre 1</h1><p>Contenu du chapitre 1...</p>",
-                        BookId = 999
-                    },
-                    new Chapter
-                    {
-                        Id = 2,
-                        Title = "Chapitre 2 : Développement",
-                        HtmlContent = "<h1>Chapitre 2</h1><p>Contenu du chapitre 2...</p>",
-                        BookId = 999
-                    },
-                    new Chapter
-                    {
-                        Id = 3,
-                        Title = "Chapitre 3 : Conclusion",
-                        HtmlContent = "<h1>Chapitre 3</h1><p>Contenu du chapitre 3...</p>",
-                        BookId = 999
-                    }
-                }
-            };
-
-            Books.Add(mockBook);
-            UpdateFilteredBooks();
         }
 
         private async Task LoadTagsAsync()
@@ -97,7 +56,22 @@ namespace App.ViewModels
                 Console.WriteLine($"Erreur lors du chargement des tags : {ex.Message}");
             }
         }
-
+         public async Task UpdateTagFilterAsync()
+        {
+            try
+            {
+                var tags = await _tagApi.GetAllTagsAsync();
+                AvailableTags.Clear();
+                foreach (var tag in tags)
+                {
+                    AvailableTags.Add(tag);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erreur lors de la mise à jour des tags : {ex.Message}");
+            }
+        }
         // Charger les livres depuis l'API
         private async Task LoadBooksAsync()
         {
@@ -274,12 +248,12 @@ namespace App.ViewModels
 
 
         [RelayCommand]
-        private async Task AddTagToBookAsync(Book book)
+        private async Task AddTagToBookAsync(Book book)  // Make sure this accepts a Book parameter
         {
-            try
+            if (book == null) return;
+            
+            try 
             {
-                if (book == null) return;
-                
                 // Afficher une page de dialogue pour sélectionner un tag
                 var selectedTags = await App.Current.MainPage.DisplayActionSheet(
                     "Sélectionner un tag", 
@@ -337,6 +311,24 @@ namespace App.ViewModels
                 Console.WriteLine($"Erreur lors de l'ajout du tag : {ex.Message}");
                 await App.Current.MainPage.DisplayAlert("Erreur", "Impossible d'ajouter le tag.", "OK");
             }
+        }
+
+        [RelayCommand]
+        public async Task FilterByTagsAsync(IEnumerable<Tag> selectedTags)
+        {
+            if (selectedTags == null || !selectedTags.Any())
+            {
+                FilteredBooks = new ObservableCollection<Book>(Books);
+                return;
+            }
+
+            var filtered = Books.Where(book => 
+                book.Tags != null && 
+                book.Tags.Any(bookTag => 
+                    selectedTags.Any(selectedTag => 
+                        selectedTag.Id == bookTag.Id)));
+
+            FilteredBooks = new ObservableCollection<Book>(filtered);
         }
     }
 }

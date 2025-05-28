@@ -1,16 +1,24 @@
-﻿using System;
-using System.Globalization;
-using Microsoft.Maui.Controls;
+﻿using Microsoft.Maui.Controls;
+using System;
 using System.Collections.ObjectModel;
-using App.Models;
+using System.Globalization;
+using VersOne.Epub;
+using VersOne.Epub.Schema;   // pour EpubLocalTextContentFile
+
 namespace App.Helper
 {
     public class HasNextChapterConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is ObservableCollection<Chapter> chapters && parameter is int index)
-                return chapters != null && index < chapters.Count - 1;
+            // On s'attend à recevoir une ObservableCollection<EpubLocalTextContentFile> 
+            // et un index en parameter
+            if (value is ObservableCollection<EpubLocalTextContentFile> chapters
+                && parameter is string indexString
+                && int.TryParse(indexString, out int index))
+            {
+                return chapters.Count > 0 && index < chapters.Count - 1;
+            }
             return false;
         }
 

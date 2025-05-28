@@ -73,6 +73,7 @@
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.4" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.11" />
+		<PackageReference Include="VersOne.Epub" Version="3.3.4" />
 	</ItemGroup>
 
 	<ItemGroup>

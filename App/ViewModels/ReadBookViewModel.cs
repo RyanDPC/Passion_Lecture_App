@@ -4,256 +4,226 @@ using App.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.ObjectModel;
-using System.Threading.Tasks;
 using Microsoft.Maui.Controls;
+using System.Collections.ObjectModel;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using VersOne.Epub;
+using VersOne.Epub.Schema;
 
 namespace App.ViewModels
 {
-    public partial class ReadBookViewModel : ObservableObject
+    public partial class ReadBookViewModel : BaseViewModel
     {
         private int _bookId;
-        private readonly BookApi _bookApi = new();
+        private EpubBook _epubBook;
+        private readonly ReadingProgressService _progressService;
 
         [ObservableProperty]
         private Book currentBook;
 
         [ObservableProperty]
-        private ObservableCollection<Book> bookList = new();
-
-        [ObservableProperty]
-        private int currentPage;
-
-        [ObservableProperty]
-        private bool canGoBack;
-
-        [ObservableProperty]
-        private bool canGoForward;
-
-        [ObservableProperty]
-        private ObservableCollection<Tag> bookTags = new();
-
-        [ObservableProperty]
-        private string bookCategory;
-
-        [ObservableProperty]
-        private double averageRating;
-
-        [ObservableProperty]
-        private ObservableCollection<Chapter> chapters = new();
-
-        [ObservableProperty]
-        private Chapter currentChapter;
+        private ObservableCollection<EpubLocalTextContentFile> chapters = new();
 
         [ObservableProperty]
         private int currentChapterIndex;
 
-        public string CurrentChapterTitle => CurrentChapter?.Title ?? "Aucun chapitre";
+        [ObservableProperty]
+        private string currentChapterTitle;
 
-        public HtmlWebViewSource CurrentChapterHtmlSource => new()
+        [ObservableProperty]
+        private HtmlWebViewSource currentHtmlContent = new();
+
+        [ObservableProperty]
+        private string currentChapter;
+
+        [ObservableProperty]
+        private int currentPage;
+
+        public ReadBookViewModel()
         {
-            Html = CurrentChapter?.HtmlContent ?? "<p>Pas de contenu</p>"
-        };
-
-        public double ReadingProgress => CurrentBook != null && CurrentBook.Pages > 0
-            ? (double)CurrentPage / CurrentBook.Pages
-            : 0;
-
-        public string CurrentPageContent => CurrentBook?.Passage ?? "Contenu non disponible";
-
-        public string CurrentPageTitle => $"Chapitre {(CurrentPage / 10) + 1}";
-
-        public bool HasPageTitles => CurrentPage % 10 == 1;
-
-        public bool HasNextChapter => Chapters != null && CurrentChapterIndex < Chapters.Count - 1;
-
-        public string CurrentPageText => $"Page {CurrentPage} sur {CurrentBook?.Pages ?? 1}";
+            _progressService = new ReadingProgressService();
+        }
 
         public ReadBookViewModel(int bookId)
         {
             _bookId = bookId;
+            _progressService = new ReadingProgressService();
         }
 
-        public async Task LoadBookAsync(int bookId)
+        public int BookId
         {
-            _bookId = bookId;
-            try
+            get => _bookId;
+            set => _bookId = value;
+        }
+
+        public async Task LoadBookAsync()
+        {
+            try 
             {
-                var books = await _bookApi.GetBookByIdAsync(bookId);
-                if (books.Count > 0)
+                System.Diagnostics.Debug.WriteLine($"[DEBUG] Début du chargement du livre {_bookId}");
+                
+                // Utiliser directement le contexte au lieu de l'API
+                await using var context = new DataContext();
+                CurrentBook = await context.Books
+                    .Include(b => b.Tags)  // Inclure les tags
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(b => b.Id == _bookId);
+                
+                if (CurrentBook != null)
                 {
-                    CurrentBook = books[0];
-
-                    if (CurrentBook.Chapters != null && CurrentBook.Chapters.Count > 0)
+                    System.Diagnostics.Debug.WriteLine($"[DEBUG] Livre chargé: {CurrentBook.Name}");
+                    System.Diagnostics.Debug.WriteLine($"[DEBUG] Taille du contenu: {(CurrentBook.Content?.Length ?? 0)} bytes");
+                    if (CurrentBook.Content == null)
                     {
-                        Chapters = new ObservableCollection<Chapter>(CurrentBook.Chapters);
-                        CurrentChapterIndex = 0;
-                        CurrentChapter = Chapters[CurrentChapterIndex];
+                        // Si le contenu est null, essayer de synchroniser avec l'API
+                        await context.SyncBookAsync();
+                        CurrentBook = await context.Books
+                            .AsNoTracking()
+                            .FirstOrDefaultAsync(b => b.Id == _bookId);
                     }
-
-                    if (CurrentBook.Tags != null)
-                    {
-                        BookTags = new ObservableCollection<Tag>(CurrentBook.Tags);
-                    }
-
-                    await SaveBookToLocalDbAsync();
-                    await LoadLastPageFromLocalDbAsync();
                 }
                 else
                 {
-                    await LoadBookFromLocalDbAsync();
+                    System.Diagnostics.Debug.WriteLine("[ERROR] Le livre n'a pas été trouvé!");
+                    // Si le livre n'existe pas localement, synchroniser avec l'API
+                    await context.SyncBookAsync();
+                    CurrentBook = await context.Books
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(b => b.Id == _bookId);
+                }
+
+                if (CurrentBook?.Content?.Length > 0)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[DEBUG] Premier octets EPUB: {BitConverter.ToString(CurrentBook.Content.Take(10).ToArray())}");
+
+                    // Charger le EPUB et son contenu en mémoire
+                    using var ms = new MemoryStream(CurrentBook.Content);
+                    _epubBook = await EpubReader.ReadBookAsync(ms);
+
+                    // ReadingOrder est une List<EpubLocalTextContentFile>
+                    Chapters = new ObservableCollection<EpubLocalTextContentFile>(_epubBook.ReadingOrder);
+
+                    // Afficher le premier chapitre
+                    if (Chapters.Any())
+                    {
+                        SetChapter(0);
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Le contenu EPUB est vide ou null !");
+                    CurrentHtmlContent = new HtmlWebViewSource { Html = "<p>Contenu indisponible</p>" };
+                    CurrentChapterTitle = "Aucun contenu";
+                }
+
+                // Charger la progression
+                var progress = await _progressService.GetProgressAsync(_bookId);
+                if (progress != null)
+                {
+                    CurrentPage = progress.Page;
+                    CurrentChapter = progress.Chapter;
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Erreur lors du chargement du livre depuis l'API: " + ex.Message);
-
-                if (ex.InnerException != null)
-                {
-                    Console.WriteLine("Détail de l'erreur interne : " + ex.InnerException.Message);
-                }
-
-                await LoadBookFromLocalDbAsync();
-            }
-
-            UpdateNavigationState();
-        }
-
-        private async Task LoadBookFromLocalDbAsync()
-        {
-            await using var context = new DataContext();
-            CurrentBook = await context.Books.FirstOrDefaultAsync(b => b.Id == _bookId);
-            if (CurrentBook != null)
-            {
-                CurrentPage = CurrentBook.LastReadPage > 0 ? CurrentBook.LastReadPage : 1;
+                System.Diagnostics.Debug.WriteLine($"[ERROR] Erreur lors du chargement: {ex.Message}");
+                throw;
             }
         }
 
-        private async Task SaveBookToLocalDbAsync()
+        private void SetChapter(int index)
         {
-            if (CurrentBook == null) return;
+            if (index < 0 || index >= Chapters.Count)
+                return;
 
-            await using var context = new DataContext();
-            var localBook = await context.Books.FirstOrDefaultAsync(b => b.Id == CurrentBook.Id);
+            CurrentChapterIndex = index;
+            EpubLocalTextContentFile chapter = Chapters[index];
 
-            if (localBook == null)
-            {
-                context.Books.Add(CurrentBook);
-            }
-            else
-            {
-                localBook.Name = CurrentBook.Name;
-                localBook.Passage = CurrentBook.Passage;
-                localBook.Summary = CurrentBook.Summary;
-                localBook.EditionYear = CurrentBook.EditionYear;
-                localBook.CoverImage = CurrentBook.CoverImage;
-                localBook.Pages = CurrentBook.Pages;
-            }
+            // Le nom de fichier est dans la propriété Key
+            CurrentChapterTitle = Path.GetFileNameWithoutExtension(chapter.Key);
 
-            await context.SaveChangesAsync();
-        }
+            // Inject CSS directly into HTML content
+            var htmlContent = chapter.Content ?? "<p>(Chapitre vide)</p>";
+            var styledHtml = $@"
+                <html>
+                <head>
+                    <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>
+                    <style>
+                        body {{ 
+                            font-family: system-ui; 
+                            line-height: 1.6;
+                            padding: 20px;
+                            max-width: 800px;
+                            margin: 0 auto;
+                        }}
+                        img {{ max-width: 100%; height: auto; }}
+                    </style>
+                </head>
+                <body>
+                    {htmlContent}
+                </body>
+                </html>";
 
-        private async Task LoadLastPageFromLocalDbAsync()
-        {
-            await using var context = new DataContext();
-            var localBook = await context.Books.FirstOrDefaultAsync(b => b.Id == _bookId);
-            if (localBook != null && localBook.LastReadPage > 0)
-            {
-                CurrentPage = localBook.LastReadPage;
-            }
-            else
-            {
-                CurrentPage = 1;
-            }
-        }
+            System.Diagnostics.Debug.WriteLine($"[DEBUG] HTML injecté dans WebView:\n{styledHtml.Substring(0, Math.Min(500, styledHtml.Length))}");
 
-        private void UpdateNavigationState()
-        {
-            CanGoBack = CurrentPage > 1;
-            CanGoForward = CurrentBook != null && CurrentPage < CurrentBook.Pages;
-        }
-
-        [RelayCommand]
-        public async Task NextPage()
-        {
-            if (CurrentBook != null && CurrentPage < CurrentBook.Pages)
-            {
-                CurrentPage++;
-                UpdateNavigationState();
-                await SaveProgressAsync();
-                RefreshPageBindings();
-            }
-        }
-
-        [RelayCommand]
-        public async Task PreviousPage()
-        {
-            if (CurrentPage > 1)
-            {
-                CurrentPage--;
-                UpdateNavigationState();
-                await SaveProgressAsync();
-                RefreshPageBindings();
-            }
-        }
-
-        private void RefreshPageBindings()
-        {
-            OnPropertyChanged(nameof(CurrentPageText));
-            OnPropertyChanged(nameof(ReadingProgress));
-            OnPropertyChanged(nameof(CurrentPageContent));
-            OnPropertyChanged(nameof(CurrentPageTitle));
-            OnPropertyChanged(nameof(HasPageTitles));
-        }
-
-        private async Task SaveProgressAsync()
-        {
-            if (CurrentBook == null) return;
-
-            await using var context = new DataContext();
-            var bookToUpdate = await context.Books.FirstOrDefaultAsync(b => b.Id == _bookId);
-            if (bookToUpdate != null)
-            {
-                bookToUpdate.LastReadPage = CurrentPage;
-            }
-            else
-            {
-                context.Books.Add(new Book
-                {
-                    Id = _bookId,
-                    Name = CurrentBook.Name,
-                    LastReadPage = CurrentPage,
-                    Pages = CurrentBook.Pages,
-                    CoverImage = CurrentBook.CoverImage
-                });
-            }
-
-            await context.SaveChangesAsync();
-
-            // Synchronisation serveur possible ici
+            CurrentHtmlContent = new HtmlWebViewSource { Html = styledHtml };
         }
 
         [RelayCommand]
         public void NextChapter()
         {
-            if (Chapters != null && CurrentChapterIndex < Chapters.Count - 1)
+            if (CurrentChapterIndex < Chapters.Count - 1)
             {
-                CurrentChapterIndex++;
-                CurrentChapter = Chapters[CurrentChapterIndex];
-                OnPropertyChanged(nameof(CurrentChapterTitle));
-                OnPropertyChanged(nameof(CurrentChapterHtmlSource));
+                SetChapter(CurrentChapterIndex + 1);
             }
         }
 
         [RelayCommand]
         public void PreviousChapter()
         {
-            if (Chapters != null && CurrentChapterIndex > 0)
+            if (CurrentChapterIndex > 0)
             {
-                CurrentChapterIndex--;
-                CurrentChapter = Chapters[CurrentChapterIndex];
-                OnPropertyChanged(nameof(CurrentChapterTitle));
-                OnPropertyChanged(nameof(CurrentChapterHtmlSource));
+                SetChapter(CurrentChapterIndex - 1);
+            }
+        }
+
+        public async Task LoadChaptersFromEpubAsync(VersOne.Epub.EpubBook epubBook)
+        {
+            Chapters = new ObservableCollection<EpubLocalTextContentFile>(epubBook?.ReadingOrder ?? new List<EpubLocalTextContentFile>());
+            
+            // Restaurer la dernière position
+            var progress = await _progressService.GetProgressAsync(_bookId);
+            if (progress != null)
+            {
+                // Trouver l'index du dernier chapitre lu
+                var chapterIndex = Chapters.ToList().FindIndex(c => 
+                    Path.GetFileNameWithoutExtension(c.Key) == progress.Chapter);
+                
+                if (chapterIndex >= 0)
+                {
+                    SetChapter(chapterIndex);
+                    CurrentPage = progress.Page;
+                }
+            }
+            else
+            {
+                SetChapter(0); // Premier chapitre par défaut
+            }
+        }
+
+        public async Task SaveReadingProgressAsync()
+        {
+            if (CurrentChapterIndex >= 0 && CurrentChapterIndex < Chapters.Count)
+            {
+                var currentChapterName = Path.GetFileNameWithoutExtension(Chapters[CurrentChapterIndex].Key);
+                await _progressService.SaveProgressAsync(
+                    _bookId,
+                    CurrentPage,
+                    currentChapterName,
+                    0 // plus de scroll position
+                );
             }
         }
     }
