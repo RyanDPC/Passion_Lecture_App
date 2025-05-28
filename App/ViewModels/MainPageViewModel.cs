@@ -1,66 +1,105 @@
-using App.Models;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Windows.Input;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using App.Models;
+using App.Services;
+namespace App.ViewModels;
 
-namespace App.ViewModels
+public partial class MainPageViewModel : ObservableObject
 {
-    public partial class MainPageViewModel : ObservableObject
+    [ObservableProperty]
+    ObservableCollection<BookViewModel> filteredBooks = new();
+
+    [ObservableProperty]
+    ObservableCollection<TagViewModel> availableTags = new();
+
+    private List<BookViewModel> allBooks = new();
+
+    [ObservableProperty]
+    private string newTagName;
+    public MainPageViewModel()
     {
-        public ObservableCollection<Tag> Tags { get; set; }
-        public ObservableCollection<Book> Books { get; set; }
+        LoadTags();
+        LoadBooksAsync();
+        FilterBooks(); // Initialisation
+    }
 
-        [ObservableProperty]
-        private ObservableCollection<Book> filteredBooks;
-
-        public MainPageViewModel()
+    private void LoadTags()
+    {
+        AvailableTags = new ObservableCollection<TagViewModel>
         {
-            // Mock tags
-            Tags = new ObservableCollection<Tag>
+            new TagViewModel("Roman"),
+            new TagViewModel("Fantasy"),
+            new TagViewModel("Science-Fiction"),
+            new TagViewModel("Horreur")
+        };
+    }
+
+    private async Task LoadBooksAsync()
+    {
+        var bookApi = new BookApi();
+        var booksFromApi = await bookApi.GetAllBooksAsync();
+
+        allBooks.Clear();
+        foreach (var book in booksFromApi)
+        {
+            var bookVM = new BookViewModel
             {
-                new Tag { Id = 1, Name = "Fantasy" },
-                new Tag { Id = 2, Name = "Science-Fiction" },
-                new Tag { Id = 3, Name = "Romance" },
-                new Tag { Id = 4, Name = "Thriller" },
-                new Tag { Id = 5, Name = "Historique" }
+                Id = book.Id,
+                Name = book.Name,
+                CoverImage = book.Content,
             };
 
-            foreach (var tag in Tags)
-            {
-                tag.PropertyChanged += (s, e) =>
-                {
-                    if (e.PropertyName == nameof(Tag.IsSelected))
-                        FilterBooks();
-                };
-            }
+            // Connecte le callback ici
+            bookVM.NewTagAvaible = HandleNewTagGlobally;
 
-            // Mock books
-            Books = new ObservableCollection<Book>
-            {
-                new Book { Id = 1, Name = "Le Seigneur des Anneaux", Summary = "Un roman de fantasy.", Tags = new[] { Tags[0] } },
-                new Book { Id = 2, Name = "Dune", Summary = "Science-fiction épique.", Tags = new[] { Tags[1] } },
-                new Book { Id = 3, Name = "Orgueil et Préjugés", Summary = "Roman classique de romance.", Tags = new[] { Tags[2] } },
-                new Book { Id = 4, Name = "Da Vinci Code", Summary = "Thriller mystérieux.", Tags = new[] { Tags[3] } },
-                new Book { Id = 5, Name = "Les Misérables", Summary = "Roman historique.", Tags = new[] { Tags[4] } }
-            };
-
-            FilteredBooks = new ObservableCollection<Book>(Books);
+            allBooks.Add(bookVM);
         }
 
-        private void FilterBooks()
+        FilterBooks();
+    }
+
+
+    [RelayCommand]
+    private void TagSelectionChanged(TagViewModel selectedTag)
+    {
+        foreach (var tag in AvailableTags)
+            tag.IsSelected = tag == selectedTag;
+
+        FilterBooks();
+    }
+
+    public void OnTagCheckboxChanged()
+    {
+        FilterBooks();
+    }
+
+    private void FilterBooks()
+    {
+        var selectedTags = AvailableTags.Where(t => t.IsSelected).Select(t => t.Name).ToList();
+
+        if (!selectedTags.Any())
         {
-            var selectedTags = Tags.Where(t => t.IsSelected).Select(t => t.Name).ToList();
-            if (selectedTags.Count == 0)
-            {
-                FilteredBooks = new ObservableCollection<Book>(Books);
-            }
-            else
-            {
-                var filtered = Books.Where(b => b.Tags.Any(t => selectedTags.Contains(t.Name))).ToList();
-                FilteredBooks = new ObservableCollection<Book>(filtered);
-            }
-            OnPropertyChanged(nameof(FilteredBooks));
+            FilteredBooks = new ObservableCollection<BookViewModel>(allBooks);
+        }
+        else
+        {
+            var filtered = allBooks.Where(book =>
+                book.Tags.Any(tag => selectedTags.Contains(tag.Name))
+            ).ToList();
+
+            FilteredBooks = new ObservableCollection<BookViewModel>(filtered);
         }
     }
+    private void HandleNewTagGlobally(TagViewModel newTag)
+    {
+        if (!AvailableTags.Any(tag => tag.Name.Equals(newTag.Name, StringComparison.OrdinalIgnoreCase)))
+        {
+            AvailableTags.Add(new TagViewModel(newTag.Name));
+            Console.WriteLine($"Tag global '{newTag.Name}' ajouté depuis un livre.");
+        }
+    }
+
 }

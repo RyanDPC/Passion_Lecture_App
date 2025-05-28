@@ -1,29 +1,28 @@
 ﻿using App.ViewModels;
-using App.Models;
-using System.Linq;
 using Microsoft.Maui.Controls;
 
 namespace App.Pages
 {
     public partial class MainPage : ContentPage
-    {       
+    {
         public MainPage()
         {
             InitializeComponent();
+            BindingContext = new MainPageViewModel(); // Assure-toi que c’est bien fait ici
         }
 
         private void TagSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (BindingContext is BookViewModel vm && e.CurrentSelection.FirstOrDefault() is Tag tag)
+            if (BindingContext is MainPageViewModel vm && e.CurrentSelection.FirstOrDefault() is TagViewModel tag)
             {
-                vm.ToggleTagCommand.Execute(tag);
+                vm.TagSelectionChangedCommand.Execute(tag);
             }
         }
 
         private void TagCheckBox_CheckedChanged(object sender, CheckedChangedEventArgs e)
         {
-            // Appelle une méthode du ViewModel pour mettre à jour le filtre
-            (BindingContext as BookViewModel)?.UpdateTagFilterAsync();
+            if (BindingContext is MainPageViewModel vm)
+                vm.OnTagCheckboxChanged();
         }
     }
 }

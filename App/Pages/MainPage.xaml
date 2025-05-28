@@ -7,7 +7,7 @@
              Title="Passion Lecture">
 
     <ContentPage.BindingContext>
-        <ViewModel:BookViewModel />
+        <ViewModel:MainPageViewModel />
     </ContentPage.BindingContext>
     <ContentPage.Resources>
         <ResourceDictionary>
@@ -61,17 +61,6 @@
                     <CollectionView.ItemsLayout>
                         <LinearItemsLayout Orientation="Horizontal" ItemSpacing="10"/>
                     </CollectionView.ItemsLayout>
-                    <CollectionView.ItemTemplate>
-                        <DataTemplate>
-                            <Frame BackgroundColor="#1C1C24"
-                                   CornerRadius="15"
-                                   Padding="8,4">
-                                <Label Text="{Binding Name}"
-                                       TextColor="White"
-                                       FontSize="12"/>
-                            </Frame>
-                        </DataTemplate>
-                    </CollectionView.ItemTemplate>
                 </CollectionView>
             </HorizontalStackLayout>
         </ScrollView>
@@ -117,9 +106,9 @@
                        Margin="0,10,0,5"/>
 
                                 <!-- Bouton Ajouter un tag -->
-                                <Button Command="{Binding AddTagToBookCommand}" 
-                                        CommandParameter="{Binding SelectedBook}"
-                                        Text="Add Tag" />
+                                <Button Command="{Binding AddTagToBookAsyncCommand}" 
+                                Text="Add Tag" />
+
 
                                 <!-- Tags -->
                                 <HorizontalStackLayout Spacing="5" Margin="0,5">

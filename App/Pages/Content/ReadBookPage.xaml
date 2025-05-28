@@ -6,10 +6,6 @@
              x:Class="App.Pages.Content.ReadBookPage"
              BackgroundColor="#F5F5F5"
              Title="Lecture">
-
-    <ContentPage.BindingContext>
-        <ViewModel:ReadBookViewModel />
-    </ContentPage.BindingContext>
     <ContentPage.Resources>
         <ResourceDictionary>
             <conv:ByteArrayToImageConverter x:Key="ByteArrayToImageConverter" />
@@ -39,7 +35,8 @@
                 <Label Text="{Binding CurrentChapterTitle}"
                        FontSize="18" FontAttributes="Bold"
                        HorizontalOptions="Center" />
-                <WebView Source="{Binding CurrentHtmlContent}" VerticalOptions="FillAndExpand" />
+                <WebView Source="{Binding CurrentHtmlContent}"
+         HeightRequest="400" />
             </VerticalStackLayout>
         </ScrollView>
 
@@ -47,7 +44,7 @@
         <Grid Grid.Row="2" ColumnDefinitions="Auto,Auto" HorizontalOptions="Center">
             <Button Text="← Chapitre précédent"
                     Command="{Binding PreviousChapterCommand}"
-                    IsEnabled="{Binding CurrentChapterIndex, Converter={StaticResource IntGreaterThanZeroConverter}}" />
+                    />
             <Button Text="Chapitre suivant →"
                     Command="{Binding NextChapterCommand}"
                 />
