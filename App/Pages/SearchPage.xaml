@@ -11,7 +11,7 @@
     </ContentPage.BindingContext>
     <ContentPage.Resources>
         <ResourceDictionary>
-            <conv:ByteArrayToImageConverter x:Key="ByteArrayToImageConverter" />
+            <conv:Base64ToImageConverter x:Key="Base64ToImageConverter" />
         </ResourceDictionary>
     </ContentPage.Resources>
 
@@ -44,10 +44,10 @@
                             <Label Text="{Binding Name}" FontAttributes="Bold" TextColor="Wheat"/>
                             <Label Text="{Binding Summary}" TextColor="LightGray" FontSize="12"/>
                                 <ImageButton
-     Source="{Binding CoverImage, Converter={StaticResource ByteArrayToImageConverter}}"
-     HeightRequest="200"
-     Aspect="AspectFill"
-     Command="{Binding GoToReadBookCommand}" />
+                                    Source="{Binding CoverImage, Converter={StaticResource Base64ToImageConverter}}"
+                                    HeightRequest="200"
+                                    Aspect="AspectFill"
+                                    Command="{Binding GoToReadBookCommand}" />
                         </VerticalStackLayout>
                     </Grid>
                 </DataTemplate>

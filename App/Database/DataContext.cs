@@ -61,7 +61,7 @@ namespace App.Database
                             EditionYear = book.EditionYear,
                             Pages = book.Pages,
                             Content = book.Content,
-                            CoverImage = book.CoverImage ?? Array.Empty<byte>(),
+                            CoverImage = book.CoverImage,
                             Created = book.Created,
                             CategoryFk = book.CategoryFk,
                             EditorFk = book.EditorFk,

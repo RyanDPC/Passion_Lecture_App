@@ -14,7 +14,7 @@
     </ContentPage.BindingContext>
     <ContentPage.Resources>
         <ResourceDictionary>
-            <conv:ByteArrayToImageConverter x:Key="ByteArrayToImageConverter" />
+            <conv:Base64ToImageConverter x:Key="Base64ToImageConverter" />
         </ResourceDictionary>
     </ContentPage.Resources>
     <Grid RowDefinitions="Auto,*,Auto" ColumnDefinitions="*" >
@@ -91,7 +91,7 @@
                         CornerRadius="10"
                         Padding="0"
                         BackgroundColor="#231F2E">
-                        <Image Source="{Binding CoverImage, Converter={StaticResource ByteArrayToImageConverter}}"
+                        <Image Source="{Binding CoverImage, Converter={StaticResource Base64ToImageConverter}}"
                                Aspect="AspectFill"/>
                     </Frame>
 

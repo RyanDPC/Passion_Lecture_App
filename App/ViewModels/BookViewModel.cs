@@ -5,32 +5,43 @@ using CommunityToolkit.Mvvm.Input;
 using App.Services;
 using App.Models;
 using App.Pages.Content;
+
 namespace App.ViewModels;
 
 public partial class BookViewModel : ObservableObject
 {
     [ObservableProperty] public int id;
     [ObservableProperty] public string name;
-    [ObservableProperty] public byte[] coverImage;
+    [ObservableProperty] public string coverImage;
+    [ObservableProperty] public byte[] content;
     [ObservableProperty] public ObservableCollection<TagViewModel> tags = new();
-    [ObservableProperty]public ObservableCollection<Book> books = new();
+    [ObservableProperty] public ObservableCollection<Book> books = new();
+    [ObservableProperty] private string searchText;
+
     public Action<TagViewModel>? NewTagAvaible { get; set; }
     [ObservableProperty] public string ratingBook;
+
     private readonly BookApi _bookApi;
+    private readonly SearchApi _searchApi;
 
     public ICommand GoToReadBookCommand => new RelayCommand<int>(GoToReadBook);
     public IAsyncRelayCommand LoadBooksCommand { get; }
+    public IAsyncRelayCommand SearchBookCommand { get; }
 
-    public BookViewModel(){
-        _bookApi = new BookApi(); // ou injecté si tu préfères via DI
+    public BookViewModel()
+    {
+        _bookApi = new BookApi();
+        _searchApi = new SearchApi();
+
         LoadBooksCommand = new AsyncRelayCommand(LoadBooksAsync);
+        SearchBookCommand = new AsyncRelayCommand(SearchBooksAsync);
     }
 
     private async void GoToReadBook(int bookId)
     {
         await Shell.Current.GoToAsync($"///readbook?bookId={bookId}");
-        Console.WriteLine($"Go to book with ID {bookId}");
     }
+
     private async Task LoadBooksAsync()
     {
         var livres = await _bookApi.GetAllBooksAsync();
@@ -38,6 +49,22 @@ public partial class BookViewModel : ObservableObject
         foreach (var livre in livres)
             Books.Add(livre);
     }
+
+    private async Task SearchBooksAsync()
+    {
+        if (string.IsNullOrWhiteSpace(SearchText))
+        {
+            // Optionnel : recharger tous les livres si la recherche est vide
+            await LoadBooksAsync();
+            return;
+        }
+
+        var results = await _searchApi.SearchBook(SearchText);
+        Books.Clear();
+        foreach (var book in results)
+            Books.Add(book);
+    }
+
     [RelayCommand]
     private async void AddTagToBookAsync()
     {
@@ -57,14 +84,8 @@ public partial class BookViewModel : ObservableObject
                 Name = result,
             };
 
-            // Ajouter au livre
             Tags.Add(nouveauTag);
-
-            // Tenter d'ajouter au global via callback
             NewTagAvaible?.Invoke(nouveauTag);
-
-            Console.WriteLine($"Tag '{result}' ajouté au livre : {Name}");
         }
     }
-
 }

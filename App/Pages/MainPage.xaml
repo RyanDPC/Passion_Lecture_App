@@ -11,7 +11,7 @@
     </ContentPage.BindingContext>
     <ContentPage.Resources>
         <ResourceDictionary>
-            <conv:ByteArrayToImageConverter x:Key="ByteArrayToImageConverter" />
+            <conv:Base64ToImageConverter x:Key="Base64ToImageConverter" />
         </ResourceDictionary>
     </ContentPage.Resources>
 
@@ -43,7 +43,7 @@
                                SelectionMode="None"
                                ItemsLayout="HorizontalList"
                                HeightRequest="50">
-                    <CollectionView.ItemTemplate>
+                    <CollectionView.ItemTemplate> 
                         <DataTemplate>
                             <StackLayout Orientation="Horizontal" Spacing="5" Padding="0,0,10,0" VerticalOptions="Center">
                                 <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" 
@@ -93,7 +93,7 @@
                             <VerticalStackLayout>
                                 <!-- Image de couverture -->
                                 <Image
-                    Source="{Binding CoverImage, Converter={StaticResource ByteArrayToImageConverter}}"
+                    Source="{Binding CoverImage, Converter={StaticResource Base64ToImageConverter}}"
                     HeightRequest="250"
                     Aspect="AspectFill" />
 

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
+using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using App.Models;
@@ -31,15 +29,12 @@ namespace App.Services
         {
             try
             {
-                Console.WriteLine($"Envoi de la requête pour rechercher des livres avec : {query}");
-
                 var url = $"api/search?query={query}&searchType=book";
                 var response = await _httpClient.GetAsync(url);
 
                 if (response.IsSuccessStatusCode)
                 {
                     var data = await response.Content.ReadAsStringAsync();
-                    Console.WriteLine($"Réponse de l'API : {data}");
 
                     if (string.IsNullOrWhiteSpace(data))
                         return new List<Book>();
@@ -49,15 +44,13 @@ namespace App.Services
                 }
                 else
                 {
-                    Console.WriteLine($"Erreur dans la requête : {response.StatusCode}");
                     return new List<Book>();
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                Console.WriteLine($"Erreur lors de la recherche de livres : {ex.Message}");
                 return new List<Book>();
             }
-        }   
+        }
     }
 }

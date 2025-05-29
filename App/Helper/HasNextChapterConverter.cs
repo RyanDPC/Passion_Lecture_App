@@ -11,8 +11,6 @@ namespace App.Helper
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            // On s'attend à recevoir une ObservableCollection<EpubLocalTextContentFile> 
-            // et un index en parameter
             if (value is ObservableCollection<EpubLocalTextContentFile> chapters
                 && parameter is string indexString
                 && int.TryParse(indexString, out int index))

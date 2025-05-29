@@ -33,7 +33,6 @@ namespace App.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Erreur lors de la récupération des tags : {ex.Message}");
                 return new List<Tag>();
             }
         }

@@ -34,19 +34,12 @@ namespace App.Models
         public int Id { get; set; }
 
         [JsonPropertyName("name")]
-        [Required(ErrorMessage = "Le nom est obligatoire")]
-        [StringLength(255, ErrorMessage = "Le nom ne peut pas dépasser 255 caractères")]
-        [RegularExpression(@"^[\p{L}\p{P}\s\d]*$", ErrorMessage = "Seules les lettres, les accents, les espaces, les virgules et les points sont autorisés")]
         public string Name { get; set; }
 
         [JsonPropertyName("passage")]
-        [StringLength(250, ErrorMessage = "Le passage ne peut pas dépasser 250 caractères")]
-        [RegularExpression(@"^[\p{L}\p{P}\s\d]*$", ErrorMessage = "Seules les lettres, les accents, les espaces, les virgules et les points sont autorisés")]
         public string Passage { get; set; }
 
         [JsonPropertyName("summary")]
-        [Required(ErrorMessage = "Le résumé est obligatoire")]
-        [StringLength(2000, MinimumLength = 1, ErrorMessage = "Le résumé doit faire entre 1 et 2000 caractères")]
         public string Summary { get; set; }
 
         [JsonPropertyName("editionYear")]
@@ -54,7 +47,7 @@ namespace App.Models
         public int EditionYear { get; set; }
 
         [JsonPropertyName("coverImage")]
-        public byte[] CoverImage { get; set; }
+        public string CoverImage { get; set; }
 
         [JsonPropertyName("content")]
         [JsonConverter(typeof(BufferToByteArrayConverter))]
@@ -87,14 +80,6 @@ namespace App.Models
         
         [JsonIgnore]
         public virtual ICollection<Comment> Comments { get; set; }
-
-        public string GetContentDebugInfo()
-        {
-            return $"Content is null: {Content == null}, " +
-                   $"Length: {Content?.Length ?? 0}, " +
-                   $"First few bytes: {(Content != null && Content.Length > 0 ? 
-                       BitConverter.ToString(Content.Take(5).ToArray()) : "none")}";
-        }
     }
 
     public class ApiResponse

@@ -8,7 +8,7 @@
              Title="Lecture">
     <ContentPage.Resources>
         <ResourceDictionary>
-            <conv:ByteArrayToImageConverter x:Key="ByteArrayToImageConverter" />
+            <conv:Base64ToImageConverter x:Key="Base64ToImageConverter" />
             <conv:IntGreaterThanZeroConverter x:Key="IntGreaterThanZeroConverter" />
         </ResourceDictionary>
     </ContentPage.Resources>
@@ -17,7 +17,7 @@
 
         <!-- En-tête avec couverture et titre -->
         <Grid Grid.Row="0" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto">
-            <Image Source="{Binding CurrentBook.CoverImage, Converter={StaticResource ByteArrayToImageConverter}}"
+            <Image Source="{Binding CurrentBook.CoverImage, Converter={StaticResource Base64ToImageConverter}}"
                    HeightRequest="120" WidthRequest="80" Aspect="AspectFill" Margin="0,0,15,0" />
             <Label Grid.Column="1"
                    Text="{Binding CurrentBook.Name}"

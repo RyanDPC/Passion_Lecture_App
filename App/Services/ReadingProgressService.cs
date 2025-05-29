@@ -11,7 +11,7 @@ namespace App.Services
             using var context = new DataContext();
 
             var progress = await context.ReadingProgress
-                .AsNoTracking() // <-- Ajoute AsNoTracking pour éviter les conflits de tracking
+                .AsNoTracking()
                 .FirstOrDefaultAsync(p => p.BookId == bookId);
 
             if (progress == null)
@@ -25,7 +25,6 @@ namespace App.Services
             }
             else
             {
-                // Crée un nouvel objet pour l'update
                 var updated = new ReadingProgress
                 {
                     Id = progress.Id,

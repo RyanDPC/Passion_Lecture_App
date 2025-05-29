@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using App.Models;
 using App.Services;
+
 namespace App.ViewModels;
 
 public partial class MainPageViewModel : ObservableObject
@@ -19,11 +20,12 @@ public partial class MainPageViewModel : ObservableObject
 
     [ObservableProperty]
     private string newTagName;
+
     public MainPageViewModel()
     {
         LoadTags();
         LoadBooksAsync();
-        FilterBooks(); // Initialisation
+        FilterBooks();
     }
 
     private void LoadTags()
@@ -49,10 +51,10 @@ public partial class MainPageViewModel : ObservableObject
             {
                 Id = book.Id,
                 Name = book.Name,
-                CoverImage = book.Content,
+                CoverImage = book.CoverImage,
+                Content = book.Content,
             };
 
-            // Connecte le callback ici
             bookVM.NewTagAvaible = HandleNewTagGlobally;
 
             allBooks.Add(bookVM);
@@ -60,7 +62,6 @@ public partial class MainPageViewModel : ObservableObject
 
         FilterBooks();
     }
-
 
     [RelayCommand]
     private void TagSelectionChanged(TagViewModel selectedTag)
@@ -93,13 +94,12 @@ public partial class MainPageViewModel : ObservableObject
             FilteredBooks = new ObservableCollection<BookViewModel>(filtered);
         }
     }
+
     private void HandleNewTagGlobally(TagViewModel newTag)
     {
         if (!AvailableTags.Any(tag => tag.Name.Equals(newTag.Name, StringComparison.OrdinalIgnoreCase)))
         {
             AvailableTags.Add(new TagViewModel(newTag.Name));
-            Console.WriteLine($"Tag global '{newTag.Name}' ajouté depuis un livre.");
         }
     }
-
 }

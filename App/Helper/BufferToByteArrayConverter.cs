@@ -15,7 +15,6 @@ namespace App.Helper
                 using var document = JsonDocument.ParseValue(ref reader);
                 var root = document.RootElement;
 
-                Debug.WriteLine($"[DEBUG] Json element type: {root.ValueKind}");
 
                 if (root.ValueKind == JsonValueKind.Object)
                 {
@@ -27,17 +26,14 @@ namespace App.Helper
                             .Select(x => (byte)x.GetInt32())
                             .ToArray();
 
-                        Debug.WriteLine($"[DEBUG] Converted buffer data. Length: {result.Length}");
                         return result;
                     }
                 }
                 
-                Debug.WriteLine("[ERROR] Invalid buffer format");
                 return null;
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[ERROR] Buffer conversion failed: {ex.Message}");
                 throw;
             }
         }
@@ -49,7 +45,6 @@ namespace App.Helper
                 writer.WriteNullValue();
                 return;
             }
-
             writer.WriteStartObject();
             writer.WriteString("type", "Buffer");
             writer.WriteStartArray("data");
